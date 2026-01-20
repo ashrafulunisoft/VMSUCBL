@@ -1,11 +1,39 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Models\User;
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\PasswordResetController;
+
+/*
+|--------------------------------------------------------------------------
+| Guest pages (guest only)
+|--------------------------------------------------------------------------
+*/
+
+
+Route::get('/', function(){
+
+//---------- add role to any user --------------------------
+    // $user = User::latest()->first();
+    // $user->assignRole('staff');
+    // $user->removeRole('staff');
+
+    // dd($user->getRoleNames());
+
+//---------- add permission to any user ------------------------
+// use Spatie\Permission\Models\Permission;
+    $user = User::latest()->first();
+    $user->givePermissionTo('create users');
+
+    return "This is the Homepage ";
+    return view('home');
+})->name('home');
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -55,6 +83,14 @@ Route::middleware('auth')->group(function () {
 
 
 
+
+
+
+
+
+
+
+// -------------------------------------------------------------------------
 // Route::middleware([
 //     'auth:sanctum',
 //     config('jetstream.auth_session'),
