@@ -26,8 +26,8 @@ Route::get('/', function(){
 
 //---------- add permission to any user ------------------------
 // use Spatie\Permission\Models\Permission;
-    $user = User::latest()->first();
-    $user->givePermissionTo('create users');
+    // $user = User::latest()->first();
+    // $user->givePermissionTo('create users');
 
     return "This is the Homepage ";
     return view('home');
