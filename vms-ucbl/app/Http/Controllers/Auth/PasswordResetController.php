@@ -16,7 +16,8 @@ class PasswordResetController extends Controller
      // Show forgot password page
     public function request()
     {
-        return view('auth_custom.forget_password.blade.php');
+
+        return view('auth_custom.forget_password');
         // return view('auth.forgot-password');
     }
 
@@ -39,10 +40,15 @@ class PasswordResetController extends Controller
     // Show reset password form
     public function reset(string $token, Request $request)
     {
-        return view('auth.reset-password', [
+
+         return view('auth_custom.reset_password', [
             'token' => $token,
-            'email' => $request->email,
-        ]);
+            'email' => $request->query('email'),
+            ]);
+        // return view('auth.reset-password', [
+        //     'token' => $token,
+        //     'email' => $request->email,
+        // ]);
 
         return view('auth_custom/reset_password.blade.php',['token' => $token, 'email' => $request->email]);
     }
@@ -70,4 +76,6 @@ class PasswordResetController extends Controller
             ? redirect()->route('login')->with('status', __($status))
             : back()->withErrors(['email' => __($status)]);
     }
+
+
 }

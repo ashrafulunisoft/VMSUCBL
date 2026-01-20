@@ -13,8 +13,8 @@ class RegisterController extends Controller
     public function show()
     {
 
-        return "This is the Register page ";
-        return view('auth.register'); // Bootstrap 5
+        // return "This is the Register page ";
+        return view('auth_custom.register'); // Bootstrap 5
     }
     public function store(Request $request)
     {
