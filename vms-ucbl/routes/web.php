@@ -7,6 +7,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,6 +73,19 @@ Route::get('/reset-password/{token}', [PasswordResetController::class, 'reset'])
 Route::post('/reset-password', [PasswordResetController::class, 'update'])
     ->name('password.update');
 
+// Send reset email to currently authenticated user
+Route::post('/profile/send-reset-email', function (Request $request) {
+    $request->validate([
+        'email' => 'required|email',
+    ]);
+
+    $status = Password::sendResetLink($request->only('email'));
+
+    return back()->with('status', $status === Password::RESET_LINK_SENT
+        ? __($status)
+        : __('Failed to send reset link. ' . __($status)));
+})->name('profile.send-reset-email');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -79,6 +95,19 @@ Route::post('/reset-password', [PasswordResetController::class, 'update'])
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+});
+
+// Test email route
+Route::get('/test-mail', function() {
+    try {
+        Mail::raw('This is a test email from Laravel', function($message) {
+            $message->to('ashrafulunisoft@gmail.com')
+                    ->subject('Test Email');
+        });
+        return 'Email sent successfully! Check your inbox.';
+    } catch (\Exception $e) {
+        return 'Error sending email: ' . $e->getMessage();
+    }
 });
 
 

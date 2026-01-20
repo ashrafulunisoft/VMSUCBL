@@ -43,11 +43,21 @@
                     Edit Profile
                 </a>
 
-                <!-- Reset Password -->
-                <a href="{{ route('password.request') }}" class="btn btn-warning">
-                    Reset Password
-                </a>
+                <!-- Reset Password Form -->
+                <form method="POST" action="{{ route('profile.send-reset-email') }}" class="d-inline">
+                    @csrf
+                    <input type="hidden" name="email" value="{{ auth()->user()->email }}">
+                    <button type="submit" class="btn btn-warning">
+                        Reset Password
+                    </button>
+                </form>
             </div>
+
+            @if (session('status'))
+                <div class="alert alert-info mt-3">
+                    {{ session('status') }}
+                </div>
+            @endif
         </div>
     </div>
 </div>
