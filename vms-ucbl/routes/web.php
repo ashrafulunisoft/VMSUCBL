@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Test\TestController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -114,7 +115,10 @@ Route::get('/test-mail', function() {
 
 
 
+//----------------- Only for the test ----------------------
 
+Route::get('/play',[App\Http\Controllers\Test\TestController::class,'play']);
+Route::post('/upload',[App\Http\Controllers\Test\TestController::class,'upload'])->name('upload');
 
 
 
