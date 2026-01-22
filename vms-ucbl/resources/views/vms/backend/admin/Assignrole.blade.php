@@ -36,7 +36,7 @@
                     <div class="position-relative">
                         <label class="form-label">Employee ID</label>
                         <input type="text" id="employee-id" class="input-dark" placeholder="Auto-filled" disabled>
-                        <i class="fas fa-lock" style="position: absolute; right: 18px; top: 45px; color: var(--accent-blue); opacity: 0.6; font-size: 0.8rem;"></i>
+                        <i class="fas fa-lock input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -67,7 +67,7 @@
                     <div class="position-relative">
                         <label class="form-label">Role Type</label>
                         <input type="text" class="input-dark" value="Pre-Registration" disabled>
-                        <i class="fas fa-ban" style="position: absolute; right: 18px; top: 45px; color: var(--accent-blue); opacity: 0.6; font-size: 0.8rem;"></i>
+                        <i class="fas fa-ban input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-3">

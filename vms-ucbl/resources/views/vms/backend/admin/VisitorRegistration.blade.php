@@ -25,28 +25,28 @@
                     <label class="form-label">Full Name *</label>
                     <div class="position-relative">
                         <input type="text" name="name" class="input-dark input-custom" placeholder="Enter your full name" required>
-                        <i class="fas fa-user" style="position: absolute; right: 18px; top: 45px; color: var(--accent-blue); opacity: 0.6; font-size: 0.8rem; pointer-events: none;"></i>
+                        <i class="fas fa-user input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Email Address *</label>
                     <div class="position-relative">
                         <input type="email" name="email" class="input-dark input-custom" placeholder="name@email.com" required>
-                        <i class="fas fa-envelope" style="position: absolute; right: 18px; top: 45px; color: var(--accent-blue); opacity: 0.6; font-size: 0.8rem; pointer-events: none;"></i>
+                        <i class="fas fa-envelope input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Phone Number</label>
                     <div class="position-relative">
                         <input type="tel" name="phone" class="input-dark input-custom" placeholder="+880 1XXX-XXXXXX">
-                        <i class="fas fa-phone" style="position: absolute; right: 18px; top: 45px; color: var(--accent-blue); opacity: 0.6; font-size: 0.8rem; pointer-events: none;"></i>
+                        <i class="fas fa-phone input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Company/Organization</label>
                     <div class="position-relative">
                         <input type="text" name="company" class="input-dark input-custom" placeholder="Enter company name">
-                        <i class="fas fa-building" style="position: absolute; right: 18px; top: 45px; color: var(--accent-blue); opacity: 0.6; font-size: 0.8rem; pointer-events: none;"></i>
+                        <i class="fas fa-building input-icon"></i>
                     </div>
                 </div>
             </div>
@@ -57,8 +57,15 @@
                 <div class="col-md-6">
                     <label class="form-label">Host Name *</label>
                     <div class="position-relative">
-                        <input type="text" name="host_name" class="input-dark input-custom" placeholder="Meeting with whom?" required>
-                        <i class="fas fa-user-tie" style="position: absolute; right: 18px; top: 45px; color: var(--accent-blue); opacity: 0.6; font-size: 0.8rem; pointer-events: none;"></i>
+                        <input type="text"
+                               name="host_name"
+                               id="host_name"
+                               class="input-dark input-custom"
+                               placeholder="Meeting with whom?"
+                               required
+                               autocomplete="off">
+                        <i class="fas fa-user-tie input-icon"></i>
+                        <div id="host-suggestions" class="host-suggestions"></div>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -74,7 +81,7 @@
                     <label class="form-label">Purpose of Visit *</label>
                     <div class="position-relative">
                         <input type="text" name="purpose" class="input-dark input-custom" placeholder="Nature of visit" required>
-                        <i class="fas fa-briefcase" style="position: absolute; right: 18px; top: 45px; color: var(--accent-blue); opacity: 0.6; font-size: 0.8rem; pointer-events: none;"></i>
+                        <i class="fas fa-briefcase input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -120,14 +127,184 @@
     <style>
         #webcamBtn:hover { border-color: var(--accent-blue) !important; background: #111827; }
         #webcamBtn:hover #webcamPlaceholder i { transform: scale(1.15); }
-        .form-check-input { background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
+        .form-check-input { background-color: rgba(0, 0, 0, 0.3); border:1px solid rgba(255,255,255,0.1); cursor: pointer; }
         .form-check-input:checked { background-color: var(--accent-blue); border-color: var(--accent-blue); }
+
+        /* Host Suggestions Dropdown */
+        .host-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            margin-top: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .host-suggestions.show {
+            display: block;
+        }
+
+        .host-suggestion-item {
+            padding: 12px 20px;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .host-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .host-suggestion-item:hover {
+            background: rgba(59, 130, 246, 0.2);
+            padding-left: 25px;
+        }
+
+        .host-suggestion-item.active {
+            background: rgba(59, 130, 246, 0.3);
+            color: var(--accent-blue);
+        }
+
+        .host-suggestions::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .host-suggestions::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .host-suggestions::-webkit-scrollbar-thumb {
+            background: var(--accent-blue);
+            border-radius: 10px;
+        }
     </style>
 
     <script>
         // Set today as min date
         document.getElementById('visitDate').min = new Date().toISOString().split('T')[0];
         document.getElementById('visitDate').valueAsDate = new Date();
+
+        // Host Name Autocomplete
+        const hostInput = document.getElementById('host_name');
+        const suggestionsBox = document.getElementById('host-suggestions');
+        let debounceTimer;
+
+        // Debounce function to limit API calls
+        function debounce(func, delay) {
+            return function(...args) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        // Search hosts with debounce
+        const searchHosts = debounce(async (query) => {
+            if (query.length < 2) {
+                suggestionsBox.classList.remove('show');
+                return;
+            }
+
+            try {
+                const response = await fetch(`{{ route('admin.visitor.registration.search-host') }}?q=${encodeURIComponent(query)}`);
+                const users = await response.json();
+                displaySuggestions(users);
+            } catch (error) {
+                console.error('Error searching hosts:', error);
+            }
+        }, 300);
+
+        // Display suggestions
+        function displaySuggestions(users) {
+            if (users.length === 0) {
+                suggestionsBox.classList.remove('show');
+                return;
+            }
+
+            suggestionsBox.innerHTML = users.map(user => `
+                <div class="host-suggestion-item" data-name="${user.name}" data-id="${user.id}">
+                    <i class="fas fa-user me-2" style="opacity: 0.6; font-size: 0.8rem;"></i>
+                    ${user.name}
+                </div>
+            `).join('');
+
+            suggestionsBox.classList.add('show');
+        }
+
+        // Event listeners
+        hostInput.addEventListener('input', (e) => {
+            searchHosts(e.target.value);
+        });
+
+        hostInput.addEventListener('focus', () => {
+            if (hostInput.value.length >= 2) {
+                searchHosts(hostInput.value);
+            }
+        });
+
+        // Handle suggestion click
+        suggestionsBox.addEventListener('click', (e) => {
+            const item = e.target.closest('.host-suggestion-item');
+            if (item) {
+                hostInput.value = item.dataset.name;
+                suggestionsBox.classList.remove('show');
+            }
+        });
+
+        // Handle keyboard navigation
+        let currentFocus = -1;
+        hostInput.addEventListener('keydown', (e) => {
+            const items = suggestionsBox.querySelectorAll('.host-suggestion-item');
+
+            if (!items.length) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentFocus++;
+                if (currentFocus >= items.length) currentFocus = 0;
+                setActive(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentFocus--;
+                if (currentFocus < 0) currentFocus = items.length - 1;
+                setActive(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    items[currentFocus].click();
+                }
+            } else if (e.key === 'Escape') {
+                suggestionsBox.classList.remove('show');
+                currentFocus = -1;
+            }
+        });
+
+        function setActive(items) {
+            items.forEach((item, index) => {
+                item.classList.remove('active');
+                if (index === currentFocus) {
+                    item.classList.add('active');
+                    item.scrollIntoView({ block: 'nearest' });
+                }
+            });
+        }
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.position-relative')) {
+                suggestionsBox.classList.remove('show');
+            }
+        });
 
         // Webcam Logic
         const webcamBtn = document.getElementById('webcamBtn');

@@ -158,4 +158,14 @@ class AdminController extends Controller
         return redirect()->route('admin.visitor.registration.create')
             ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!');
     }
+
+    public function searchHost(Request $request)
+    {
+        $query = $request->get('q');
+        $users = User::where('name', 'like', '%' . $query . '%')
+                    ->limit(10)
+                    ->get(['id', 'name']);
+
+        return response()->json($users);
+    }
 }
