@@ -61,9 +61,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:receptionist'])->group(function () {
-    // dd("This is the dashboard page for receptionist")->name('receptionist.dashboard'    );
-    // Route::get('/receptionist/dashboard', [App\Http\Controllers\Receptionist\ReceptionistController::class, 'dashboard'])
-    //     ->name('receptionist.dashboard');
+    Route::get('/receptionist/dashboard', [App\Http\Controllers\Receptionist\ReceptionistController::class, 'dashboard'])
+        ->name('receptionist.dashboard');
 });
 
 Route::middleware(['auth', 'role:visitor'])->group(function () {
@@ -263,6 +262,14 @@ Route::get('/test-visitor-email', function () {
 // -------------------------------------------------------------------------
 // Visitor Management Routes (with permission middleware)
 Route::middleware(['auth'])->group(function () {
+    // API routes first (more specific)
+    Route::get('/visitor/autofill', [App\Http\Controllers\Visitor\VisitorController::class, 'autofill'])->name('visitor.autofill');
+    Route::get('/visitor/check-email', [App\Http\Controllers\Visitor\VisitorController::class, 'checkVisitorByEmail'])->name('visitor.check-email');
+    Route::get('/visitor/check-phone', [App\Http\Controllers\Visitor\VisitorController::class, 'checkVisitorByPhone'])->name('visitor.check-phone');
+    Route::get('/visitor/search-host', [App\Http\Controllers\Visitor\VisitorController::class, 'searchHost'])->name('visitor.search-host');
+    Route::get('/visitor/statistics', [App\Http\Controllers\Visitor\VisitorController::class, 'statistics'])->name('visitor.statistics');
+
+    // CRUD routes second (less specific)
     Route::get('/visitor', [App\Http\Controllers\Visitor\VisitorController::class, 'index'])->name('visitor.index');
     Route::get('/visitor/create', [App\Http\Controllers\Visitor\VisitorController::class, 'create'])->name('visitor.create');
     Route::post('/visitor', [App\Http\Controllers\Visitor\VisitorController::class, 'store'])->name('visitor.store');
@@ -270,11 +277,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/visitor/{id}/edit', [App\Http\Controllers\Visitor\VisitorController::class, 'edit'])->name('visitor.edit');
     Route::put('/visitor/{id}', [App\Http\Controllers\Visitor\VisitorController::class, 'update'])->name('visitor.update');
     Route::delete('/visitor/{id}', [App\Http\Controllers\Visitor\VisitorController::class, 'destroy'])->name('visitor.destroy');
-
-    // Visitor autofill API
-    Route::get('/visitor/autofill', [App\Http\Controllers\Visitor\VisitorController::class, 'autofill'])->name('visitor.autofill');
-    Route::get('/visitor/search-host', [App\Http\Controllers\Visitor\VisitorController::class, 'searchHost'])->name('visitor.search-host');
-    Route::get('/visitor/statistics', [App\Http\Controllers\Visitor\VisitorController::class, 'statistics'])->name('visitor.statistics');
 });
 
 // -------------------------------------------------------------------------

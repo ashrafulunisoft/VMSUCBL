@@ -33,7 +33,7 @@ class VisitorController extends Controller
      */
     public function create()
     {
-        $users = User::where('status', 'active')->get();
+        $users = User::all();
         $visitTypes = VisitType::all();
 
         return view('vms.backend.visitor.create', compact('users', 'visitTypes'));
@@ -149,7 +149,7 @@ class VisitorController extends Controller
     public function edit($id)
     {
         $visit = Visit::with(['visitor', 'type', 'meetingUser'])->findOrFail($id);
-        $users = User::where('status', 'active')->get();
+        $users = User::all();
         $visitTypes = VisitType::all();
 
         return view('vms.backend.visitor.edit', compact('visit', 'users', 'visitTypes'));
@@ -279,7 +279,7 @@ class VisitorController extends Controller
     }
 
     /**
-     * Auto-fill visitor details from previous visits
+     * Auto-fill visitor details from previous visits (DEPRECATED - use specific methods below)
      */
     public function autofill(Request $request)
     {
@@ -295,8 +295,8 @@ class VisitorController extends Controller
         }
 
         if (!is_null($visitor)) {
-            // Get latest visit for this visitor
-            $latestVisit = $visitor->visits()->latest()->first();
+            // Get latest visit for this visitor with relationships
+            $latestVisit = $visitor->visits()->with('meetingUser')->latest()->first();
 
             return response()->json([
                 'success' => true,
@@ -318,15 +318,81 @@ class VisitorController extends Controller
     }
 
     /**
-     * Search for host
+     * Check visitor by email (EXACT COPY from AdminController)
+     */
+    public function checkVisitorByEmail(Request $request)
+    {
+        $email = $request->get('email');
+
+        Log::info('=== checkVisitorByEmail Called ===', ['email' => $email]);
+
+        $visitor = Visitor::where('email', $email)->first();
+
+        Log::info('Visitor query result', ['found' => !is_null($visitor)]);
+
+        if ($visitor) {
+            Log::info('Returning visitor data', ['visitor_name' => $visitor->name]);
+
+            return response()->json([
+                'success' => true,
+                'visitor' => [
+                    'name' => $visitor->name,
+                    'email' => $visitor->email,
+                    'phone' => $visitor->phone,
+                    'company' => $visitor->address,
+                ]
+            ]);
+        }
+
+        Log::info('No visitor found, returning false');
+        return response()->json(['success' => false]);
+    }
+
+    /**
+     * Check visitor by phone (EXACT COPY from AdminController)
+     */
+    public function checkVisitorByPhone(Request $request)
+    {
+        $phone = $request->get('phone');
+
+        Log::info('=== checkVisitorByPhone Called ===', ['phone' => $phone]);
+
+        $visitor = Visitor::where('phone', $phone)->first();
+
+        Log::info('Visitor query result', ['found' => !is_null($visitor)]);
+
+        if ($visitor) {
+            Log::info('Returning visitor data', ['visitor_name' => $visitor->name]);
+
+            return response()->json([
+                'success' => true,
+                'visitor' => [
+                    'name' => $visitor->name,
+                    'email' => $visitor->email,
+                    'phone' => $visitor->phone,
+                    'company' => $visitor->address,
+                ]
+            ]);
+        }
+
+        Log::info('No visitor found, returning false');
+        return response()->json(['success' => false]);
+    }
+
+    /**
+     * Search for host (EXACT COPY from AdminController)
      */
     public function searchHost(Request $request)
     {
         $query = $request->get('q');
+
+        Log::info('=== searchHost Called ===', ['query' => $query]);
+
         $users = User::where('name', 'like', '%' . $query . '%')
-                    ->where('status', 'active')
                     ->limit(10)
                     ->get(['id', 'name']);
+
+        Log::info('Users found', ['count' => $users->count()]);
 
         return response()->json($users);
     }

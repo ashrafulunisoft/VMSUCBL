@@ -265,7 +265,6 @@
             background: #fff; color: #1e293b;
             width: 40px; height: 40px;
             border-radius: 10px; font-weight: 900;
-            box-shadow: 0 0 15px rgba(255,255,255,0.2);
             display: flex; align-items: center; justify-content: center;
         }
 
@@ -339,12 +338,135 @@
             box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.3) !important;
         }
 
+        /* --- Dashboard Specific Styles --- */
+        .glass-card-dark {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 40px;
+            padding: 3.5rem;
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(59, 130, 246, 0.05);
+            position: relative;
+        }
+
+        .input-dark {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px 20px;
+            color: #fff !important;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .checkbox-label {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.3s;
+            user-select: none;
+        }
+
+        .checkbox-label:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #5046e5, #3b82f6);
+            border: none;
+            border-radius: 100px;
+            padding: 16px;
+            color: white;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-outline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 100px;
+            color: #94a3b8;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 16px;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .permission-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #3b82f6;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-blue);
+            opacity: 0.6;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
         .fs-9 { font-size: 9px; }
         .letter-spacing-1 { letter-spacing: -1px; }
         .border-dashed { border-style: dashed; }
         .border-orange { border-color: orange; }
-        .text-shadow-white { text-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
-        .text-shadow-blue { text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
         .cursor-pointer { cursor: pointer; }
     </style>
 </head>

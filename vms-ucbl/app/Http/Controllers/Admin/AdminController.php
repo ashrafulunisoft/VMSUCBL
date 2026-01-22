@@ -72,7 +72,8 @@ class AdminController extends Controller
     public function createAssignRole(){
         $users = User::all();
         $roles = Role::all();
-        return view('vms.backend.admin.Assignrole', compact('users', 'roles'));
+        $permissions = Permission::all();
+        return view('vms.backend.admin.Assignrole', compact('users', 'roles', 'permissions'));
     }
 
     public function storeAssignRole(Request $request){
@@ -90,11 +91,18 @@ class AdminController extends Controller
         // Remove existing roles and assign new one
         $user->syncRoles([$role->id]);
 
-        // Log the assignment (optional - you might want to create a role_assignments table)
-        // For now, we'll just return success
+        // Assign permissions if selected
+        if ($request->has('permissions') && is_array($request->permissions)) {
+            // Convert permission IDs to Permission models
+            $permissionModels = Permission::whereIn('id', $request->permissions)->get();
+            $user->syncPermissions($permissionModels);
+        } else {
+            // Remove all permissions if none selected
+            $user->syncPermissions([]);
+        }
 
         return redirect()->route('admin.role.assign.create')
-            ->with('success', 'Role "' . $role->name . '" assigned to ' . $user->name . ' successfully!');
+            ->with('success', 'Role "' . $role->name . '" with permissions assigned to ' . $user->name . ' successfully!');
     }
 
     public function removeUserRole(Request $request){
