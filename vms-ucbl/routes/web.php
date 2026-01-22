@@ -264,6 +264,23 @@ Route::get('/test-visitor-email', function () {
 })->name('test.visitor.email');
 
 // -------------------------------------------------------------------------
+// Visitor Management Routes (with permission middleware)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/visitor', [App\Http\Controllers\Visitor\VisitorController::class, 'index'])->name('visitor.index');
+    Route::get('/visitor/create', [App\Http\Controllers\Visitor\VisitorController::class, 'create'])->name('visitor.create');
+    Route::post('/visitor', [App\Http\Controllers\Visitor\VisitorController::class, 'store'])->name('visitor.store');
+    Route::get('/visitor/{id}', [App\Http\Controllers\Visitor\VisitorController::class, 'show'])->name('visitor.show');
+    Route::get('/visitor/{id}/edit', [App\Http\Controllers\Visitor\VisitorController::class, 'edit'])->name('visitor.edit');
+    Route::put('/visitor/{id}', [App\Http\Controllers\Visitor\VisitorController::class, 'update'])->name('visitor.update');
+    Route::delete('/visitor/{id}', [App\Http\Controllers\Visitor\VisitorController::class, 'destroy'])->name('visitor.destroy');
+
+    // Visitor autofill API
+    Route::get('/visitor/autofill', [App\Http\Controllers\Visitor\VisitorController::class, 'autofill'])->name('visitor.autofill');
+    Route::get('/visitor/search-host', [App\Http\Controllers\Visitor\VisitorController::class, 'searchHost'])->name('visitor.search-host');
+    Route::get('/visitor/statistics', [App\Http\Controllers\Visitor\VisitorController::class, 'statistics'])->name('visitor.statistics');
+});
+
+// -------------------------------------------------------------------------
 // Test SMS route
 Route::get('/test-sms', function () {
     $smsService = new \App\Services\SmsNotificationService();
