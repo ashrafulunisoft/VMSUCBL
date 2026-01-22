@@ -230,9 +230,12 @@ class AdminController extends Controller
 
     public function updateVisitor(Request $request, $id)
     {
+        $visit = Visit::findOrFail($id);
+        $visitor = Visitor::findOrFail($visit->visitor_id);
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => 'required|email|unique:visitors,email,'.$visitor->id.'|max:255',
             'phone' => 'nullable|string|max:20',
             'company' => 'nullable|string|max:255',
             'host_name' => 'required|string|max:255',
@@ -243,12 +246,10 @@ class AdminController extends Controller
         ]);
 
         try {
-            $visit = Visit::findOrFail($id);
-
             // Update visitor information
-            $visitor = Visitor::findOrFail($visit->visitor_id);
             $visitor->update([
                 'name' => $request->name,
+                'email' => $request->email,
                 'phone' => $request->phone,
                 'address' => $request->company,
             ]);

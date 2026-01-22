@@ -581,16 +581,18 @@
                 body: formData
             })
             .then(response => {
-                if (response.ok) {
-                    return response.json();
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw err;
+                    });
                 }
-                throw new Error('Network response was not ok');
+                return response.json();
             })
             .then(data => {
                 if (data.success) {
                     Swal.fire({
                         title: 'Success!',
-                        text: 'Visitor updated successfully!',
+                        text: data.message || 'Visitor updated successfully!',
                         icon: 'success',
                         background: '#0f172a',
                         color: '#fff',
@@ -601,7 +603,7 @@
                 } else {
                     Swal.fire({
                         title: 'Error!',
-                        text: 'Failed to update visitor',
+                        text: data.message || 'Failed to update visitor',
                         icon: 'error',
                         background: '#0f172a',
                         color: '#fff',
@@ -610,9 +612,19 @@
                 }
             })
             .catch(error => {
+                let errorMessage = 'An error occurred while updating';
+
+                if (error.errors) {
+                    // Handle Laravel validation errors
+                    const firstError = Object.values(error.errors)[0];
+                    errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
                 Swal.fire({
                     title: 'Error!',
-                    text: 'An error occurred while updating',
+                    text: errorMessage,
                     icon: 'error',
                     background: '#0f172a',
                     color: '#fff',
