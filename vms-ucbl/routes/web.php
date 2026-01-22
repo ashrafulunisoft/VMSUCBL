@@ -220,6 +220,23 @@ Route::get('/logout', function () {
 
 
 
+// Test notification route
+Route::get('/test-notification', function () {
+    $visitor = \App\Models\Visitor::first();
+
+    if (!$visitor) {
+        return 'No visitor found in database. Create a visitor first.';
+    }
+
+    // Test email
+    try {
+        $visitor->notify(new \App\Notifications\VisitorRegistered($visitor, $visitor->visits()->first()));
+        return 'Email notification sent successfully! Check your inbox.';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+})->name('test.notification');
+
 // -------------------------------------------------------------------------
 // Route::middleware([
 //     'auth:sanctum',

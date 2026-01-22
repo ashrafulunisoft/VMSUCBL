@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use App\Models\User;
 use App\Models\Visitor;
 use App\Models\Visit;
 use App\Models\VisitType;
+use App\Notifications\VisitorRegistered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -154,6 +156,19 @@ class AdminController extends Controller
             'status' => 'approved', // Auto-approve when created by admin
             'approved_at' => now(),
         ]);
+
+        // Send email notification to visitor
+        $visitor->notify(new VisitorRegistered($visitor, $visit));
+
+        // Send SMS notification if phone number exists
+        if ($visitor->phone && config('sms.enabled')) {
+            $visitDate = \Carbon\Carbon::parse($visit->schedule_time)->format('M j, Y g:i A');
+            $smsMessage = "UCB Bank: Visit confirmed on {$visitDate}. "
+                          . "Status: " . ucfirst($visit->status) . ". "
+                          . "Arrive 10 mins early. Questions? Contact us.";
+
+            NotificationHelper::sendSms($visitor->phone, $smsMessage);
+        }
 
         return redirect()->route('admin.visitor.registration.create')
             ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!')
