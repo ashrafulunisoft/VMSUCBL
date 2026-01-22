@@ -236,20 +236,37 @@ class AdminController extends Controller
                     'status' => $visit->status,
                 ];
 
-                // Use SmsNotificationService to send SMS
+                // Prepare SMS message
+                $smsMessage = "Dear {$visitor->name}, Your visit to UCB Bank is confirmed for " .
+                              \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A') .
+                              ". Host: {$hostUser->name}. Status: {$visit->status}. Thank you!";
+
+                // Use SmsNotificationService to send SMS immediately (synchronous)
                 $smsService = new SmsNotificationService();
-                $smsSent = $smsService->sendVisitorRegistrationSms($smsData);
+
+                // Format phone number to 880XXXXXXXXXX format
+                $phone = $visitor->phone;
+                // Remove +, spaces, and ensure starts with 880
+                $phone = preg_replace('/[^0-9]/', '', $phone);
+                if (strpos($phone, '880') !== 0) {
+                    $phone = '88' . $phone;
+                }
+
+                $smsResult = $smsService->send($phone, $smsMessage);
+                $smsSent = $smsResult['success'] ?? false;
 
                 if ($smsSent) {
-                    Log::info('SMS notification dispatched successfully', [
+                    Log::info('SMS notification sent successfully', [
                         'visit_id' => $visit->id,
-                        'visitor_phone' => $visitor->phone,
+                        'visitor_phone' => $phone,
+                        'message_id' => $smsResult['message_id'] ?? 'N/A',
                         'sent_at' => now()->toDateTimeString()
                     ]);
                 } else {
-                    Log::error('Failed to dispatch SMS notification', [
+                    Log::error('Failed to send SMS notification', [
                         'visit_id' => $visit->id,
-                        'visitor_phone' => $visitor->phone
+                        'visitor_phone' => $phone,
+                        'error' => $smsResult['message'] ?? 'Unknown error'
                     ]);
                 }
             }
@@ -444,28 +461,43 @@ class AdminController extends Controller
 
                 // Send SMS notification if phone number exists
                 if ($visitor->phone) {
-                    $smsData = [
-                        'visitor_name' => $visitor->name,
-                        'visitor_phone' => $visitor->phone,
-                        'visitor_email' => $visitor->email,
-                        'status' => $visit->status,
+                    // Prepare SMS message
+                    $statusMessages = [
+                        'approved' => 'Your visit has been approved.',
+                        'completed' => 'Your visit has been completed.',
+                        'cancelled' => 'Your visit has been cancelled.',
+                        'pending' => 'Your visit is pending approval.',
+                        'rejected' => 'Your visit has been rejected.',
                     ];
 
+                    $statusMessage = $statusMessages[$visit->status] ?? "Your visit status is: " . ucfirst($visit->status);
+                    $smsMessage = "Dear {$visitor->name}, {$statusMessage} Thank you!";
+
+                    // Format phone number to 880XXXXXXXXXX format
+                    $phone = $visitor->phone;
+                    $phone = preg_replace('/[^0-9]/', '', $phone);
+                    if (strpos($phone, '880') !== 0) {
+                        $phone = '88' . $phone;
+                    }
+
                     $smsService = new SmsNotificationService();
-                    $smsSent = $smsService->sendVisitStatusSms($smsData);
+                    $smsResult = $smsService->send($phone, $smsMessage);
+                    $smsSent = $smsResult['success'] ?? false;
 
                     if ($smsSent) {
-                        Log::info('Visit status SMS dispatched successfully', [
+                        Log::info('Visit status SMS sent successfully', [
                             'visit_id' => $visit->id,
-                            'visitor_phone' => $visitor->phone,
+                            'visitor_phone' => $phone,
                             'status' => $visit->status,
+                            'message_id' => $smsResult['message_id'] ?? 'N/A',
                             'sent_at' => now()->toDateTimeString()
                         ]);
                     } else {
-                        Log::error('Failed to dispatch visit status SMS', [
+                        Log::error('Failed to send visit status SMS', [
                             'visit_id' => $visit->id,
-                            'visitor_phone' => $visitor->phone,
-                            'status' => $visit->status
+                            'visitor_phone' => $phone,
+                            'status' => $visit->status,
+                            'error' => $smsResult['message'] ?? 'Unknown error'
                         ]);
                     }
                 }
