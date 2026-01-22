@@ -9,6 +9,7 @@ use App\Models\Visitor;
 use App\Models\Visit;
 use App\Models\VisitType;
 use App\Notifications\VisitorRegistered;
+use App\Services\EmailNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -127,52 +128,155 @@ class AdminController extends Controller
             'face_image' => 'nullable|string',
         ]);
 
-        // Create or find visitor
-        $visitor = Visitor::firstOrCreate(
-            ['email' => $request->email],
-            [
-                'name' => $request->name,
-                'phone' => $request->phone,
-                'address' => $request->company,
-                'is_blocked' => false,
-            ]
-        );
-
-        // Find or create host user by name
-        $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
-
-        if (!$hostUser) {
-            // If host doesn't exist, use current admin as default host
-            $hostUser = Auth::user();
-        }
-
-        // Create visit record
-        $visit = Visit::create([
-            'visitor_id' => $visitor->id,
-            'meeting_user_id' => $hostUser->id,
-            'visit_type_id' => $request->visit_type_id,
-            'purpose' => $request->purpose,
-            'schedule_time' => $request->visit_date,
-            'status' => 'approved', // Auto-approve when created by admin
-            'approved_at' => now(),
+        // Log the start of visitor registration process
+        Log::info('Starting visitor registration process', [
+            'admin_name' => Auth::user()->name ?? 'System',
+            'admin_email' => Auth::user()->email ?? 'N/A',
+            'visitor_name' => $request->name,
+            'visitor_email' => $request->email,
+            'visit_date' => $request->visit_date,
+            'ip_address' => $request->ip(),
+            'timestamp' => now()->toDateTimeString()
         ]);
 
-        // Send email notification to visitor
-        $visitor->notify(new VisitorRegistered($visitor, $visit));
+        try {
+            // Create or find visitor
+            $visitor = Visitor::firstOrCreate(
+                ['email' => $request->email],
+                [
+                    'name' => $request->name,
+                    'phone' => $request->phone,
+                    'address' => $request->company,
+                    'is_blocked' => false,
+                ]
+            );
 
-        // Send SMS notification if phone number exists
-        if ($visitor->phone && config('sms.enabled')) {
-            $visitDate = \Carbon\Carbon::parse($visit->schedule_time)->format('M j, Y g:i A');
-            $smsMessage = "UCB Bank: Visit confirmed on {$visitDate}. "
-                          . "Status: " . ucfirst($visit->status) . ". "
-                          . "Arrive 10 mins early. Questions? Contact us.";
+            Log::info('Visitor record created/retrieved', [
+                'visitor_id' => $visitor->id,
+                'visitor_name' => $visitor->name,
+                'visitor_email' => $visitor->email,
+                'is_new_visitor' => $visitor->wasRecentlyCreated ?? false
+            ]);
 
-            NotificationHelper::sendSms($visitor->phone, $smsMessage);
+            // Find or create host user by name
+            $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
+
+            if (!$hostUser) {
+                // If host doesn't exist, use current admin as default host
+                $hostUser = Auth::user();
+                Log::warning('Host not found, using current admin as default host', [
+                    'requested_host' => $request->host_name,
+                    'default_host' => $hostUser->name,
+                    'default_host_id' => $hostUser->id
+                ]);
+            }
+
+            // Create visit record
+            $visit = Visit::create([
+                'visitor_id' => $visitor->id,
+                'meeting_user_id' => $hostUser->id,
+                'visit_type_id' => $request->visit_type_id,
+                'purpose' => $request->purpose,
+                'schedule_time' => $request->visit_date,
+                'status' => 'approved', // Auto-approve when created by admin
+                'approved_at' => now(),
+            ]);
+
+            Log::info('Visit record created successfully', [
+                'visit_id' => $visit->id,
+                'visitor_id' => $visit->visitor_id,
+                'host_id' => $visit->meeting_user_id,
+                'visit_type_id' => $visit->visit_type_id,
+                'schedule_time' => $visit->schedule_time,
+                'status' => $visit->status,
+                'approved_at' => $visit->approved_at
+            ]);
+
+            // Prepare email data
+            $emailData = [
+                'visitor_name' => $visitor->name,
+                'visitor_email' => $visitor->email,
+                'visitor_phone' => $visitor->phone,
+                'visitor_company' => $visitor->address,
+                'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+                'visit_type' => $visit->type->name ?? 'N/A',
+                'purpose' => $visit->purpose,
+                'host_name' => $hostUser->name,
+                'status' => $visit->status,
+            ];
+
+            // Use EmailNotificationService to send email
+            $emailService = new EmailNotificationService();
+            $emailSent = $emailService->sendVisitorRegistrationEmail($emailData);
+
+            if ($emailSent) {
+                Log::info('Visitor registration email sent successfully', [
+                    'visit_id' => $visit->id,
+                    'visitor_email' => $visitor->email,
+                    'sent_at' => now()->toDateTimeString()
+                ]);
+            } else {
+                Log::error('Failed to send visitor registration email', [
+                    'visit_id' => $visit->id,
+                    'visitor_email' => $visitor->email
+                ]);
+            }
+
+            // Send SMS notification if phone number exists
+            if ($visitor->phone && config('sms.enabled')) {
+                $visitDate = \Carbon\Carbon::parse($visit->schedule_time)->format('M j, Y g:i A');
+                $smsMessage = "UCB Bank: Visit confirmed on {$visitDate}. "
+                              . "Status: " . ucfirst($visit->status) . ". "
+                              . "Arrive 10 mins early. Questions? Contact us.";
+
+                $smsSent = NotificationHelper::sendSms($visitor->phone, $smsMessage);
+
+                if ($smsSent) {
+                    Log::info('SMS notification sent successfully', [
+                        'visit_id' => $visit->id,
+                        'visitor_phone' => $visitor->phone,
+                        'sent_at' => now()->toDateTimeString()
+                    ]);
+                } else {
+                    Log::error('Failed to send SMS notification', [
+                        'visit_id' => $visit->id,
+                        'visitor_phone' => $visitor->phone
+                    ]);
+                }
+            }
+
+            // Log successful completion of visitor registration
+            Log::info('Visitor registration completed successfully', [
+                'visitor_id' => $visitor->id,
+                'visit_id' => $visit->id,
+                'visitor_name' => $visitor->name,
+                'visitor_email' => $visitor->email,
+                'visit_date' => $visit->schedule_time,
+                'host_name' => $hostUser->name,
+                'status' => $visit->status,
+                'email_sent' => $emailSent,
+                'sms_sent' => ($visitor->phone && config('sms.enabled')) ? 'attempted' : 'skipped',
+                'registered_by' => Auth::user()->name ?? 'System',
+                'completed_at' => now()->toDateTimeString()
+            ]);
+
+            return redirect()->route('admin.visitor.registration.create')
+                ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!')
+                ->withInput();
+
+        } catch (\Exception $e) {
+            // Log error during visitor registration
+            Log::error('Error during visitor registration', [
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'visitor_name' => $request->name ?? 'N/A',
+                'visitor_email' => $request->email ?? 'N/A',
+                'trace' => $e->getTraceAsString(),
+                'occurred_at' => now()->toDateTimeString()
+            ]);
+
+            return back()->with('error', 'Failed to register visitor: ' . $e->getMessage())->withInput();
         }
-
-        return redirect()->route('admin.visitor.registration.create')
-            ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!')
-            ->withInput();
     }
 
     public function searchHost(Request $request)
@@ -276,6 +380,7 @@ class AdminController extends Controller
             }
 
             // Update visit
+            $oldStatus = $visit->status;
             $visit->update([
                 'meeting_user_id' => $hostUser->id,
                 'visit_type_id' => $request->visit_type_id,
@@ -284,6 +389,49 @@ class AdminController extends Controller
                 'status' => $request->status,
                 'approved_at' => $request->status === 'approved' ? now() : $visit->approved_at,
             ]);
+
+            // Log visit update
+            Log::info('Visit details updated', [
+                'visit_id' => $visit->id,
+                'visitor_name' => $visitor->name,
+                'old_status' => $oldStatus,
+                'new_status' => $visit->status,
+                'updated_by' => Auth::user()->name ?? 'System',
+                'updated_at' => now()->toDateTimeString()
+            ]);
+
+            // Send status update email if status changed
+            if ($oldStatus !== $visit->status) {
+                $emailData = [
+                    'visitor_name' => $visitor->name,
+                    'visitor_email' => $visitor->email,
+                    'visitor_company' => $visitor->address,
+                    'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+                    'visit_type' => $visit->type->name ?? 'N/A',
+                    'purpose' => $visit->purpose,
+                    'host_name' => $hostUser->name,
+                    'status' => $visit->status,
+                    'remarks' => $request->remarks ?? null,
+                ];
+
+                $emailService = new EmailNotificationService();
+                $emailSent = $emailService->sendVisitStatusEmail($emailData);
+
+                if ($emailSent) {
+                    Log::info('Visit status email sent successfully', [
+                        'visit_id' => $visit->id,
+                        'visitor_email' => $visitor->email,
+                        'status' => $visit->status,
+                        'sent_at' => now()->toDateTimeString()
+                    ]);
+                } else {
+                    Log::error('Failed to send visit status email', [
+                        'visit_id' => $visit->id,
+                        'visitor_email' => $visitor->email,
+                        'status' => $visit->status
+                    ]);
+                }
+            }
 
             // Check if request expects JSON (AJAX)
             if ($request->expectsJson()) {

@@ -237,6 +237,32 @@ Route::get('/test-notification', function () {
     }
 })->name('test.notification');
 
+// Test visitor registration email with EmailNotificationService
+Route::get('/test-visitor-email', function () {
+    $emailService = new \App\Services\EmailNotificationService();
+
+    $emailData = [
+        'visitor_name' => 'Test Visitor',
+        'visitor_email' => 'ashrafulunisoft@gmail.com',
+        'visitor_phone' => '+8801234567890',
+        'visitor_company' => 'Test Company',
+        'visit_date' => 'January 25, 2026 - 2:30 PM',
+        'visit_type' => 'Business Meeting',
+        'purpose' => 'Testing email notification service',
+        'host_name' => 'Test Host',
+        'status' => 'approved',
+    ];
+
+    try {
+        $result = $emailService->sendVisitorRegistrationEmail($emailData);
+        return $result
+            ? '✅ Visitor registration email sent successfully! Check ashrafulunisoft@gmail.com'
+            : '❌ Failed to send email. Check logs for details.';
+    } catch (\Exception $e) {
+        return '❌ Error: ' . $e->getMessage();
+    }
+})->name('test.visitor.email');
+
 // -------------------------------------------------------------------------
 // Route::middleware([
 //     'auth:sanctum',
