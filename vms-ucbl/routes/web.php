@@ -49,6 +49,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/role/assign/create', [AdminController::class, 'createAssignRole'])->name('admin.role.assign.create');
     Route::post('/admin/role/assign/store', [AdminController::class, 'storeAssignRole'])->name('admin.role.assign.store');
     Route::post('/admin/role/assign/remove', [AdminController::class, 'removeUserRole'])->name('admin.role.assign.remove');
+    Route::get('/admin/visitor/registration/create', [AdminController::class, 'createVisitorRegistration'])->name('admin.visitor.registration.create');
+    Route::post('/admin/visitor/registration/store', [AdminController::class, 'storeVisitorRegistration'])->name('admin.visitor.registration.store');
 });
 
 Route::middleware(['auth', 'role:receptionist'])->group(function () {

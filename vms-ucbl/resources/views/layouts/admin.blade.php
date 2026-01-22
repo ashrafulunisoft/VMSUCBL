@@ -516,8 +516,8 @@
             </div>
 
             <nav>
-                <a href="#" class="sidebar-item active"><i class="fas fa-th-large"></i> Dashboard</a>
-                <a href="#" class="sidebar-item"><i class="fas fa-plus"></i> Create Invite</a>
+                <a href="{{ route('admin.dashboard') }}" class="sidebar-item active"><i class="fas fa-th-large"></i> Dashboard</a>
+                <a href="{{ route('admin.visitor.registration.create') }}" class="sidebar-item"><i class="fas fa-plus"></i> Visitor Registration</a>
                 <a href="#" class="sidebar-item"><i class="fas fa-history"></i> View History</a>
                 <a href="#" class="sidebar-item"><i class="fas fa-user-plus"></i> Add New User</a>
                 <a href="#" class="sidebar-item"><i class="fas fa-list"></i> Visitor's Log</a>

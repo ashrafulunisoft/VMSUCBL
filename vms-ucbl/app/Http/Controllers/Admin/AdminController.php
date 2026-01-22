@@ -4,7 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Visitor;
+use App\Models\Visit;
+use App\Models\VisitType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -98,5 +103,59 @@ class AdminController extends Controller
 
         return redirect()->route('admin.role.assign.create')
             ->with('success', 'Role removed from ' . $user->name . ' successfully!');
+    }
+
+    public function createVisitorRegistration(){
+        $users = User::all();
+        $visitTypes = VisitType::all();
+        return view('vms.backend.admin.VisitorRegistration', compact('users', 'visitTypes'));
+    }
+
+    public function storeVisitorRegistration(Request $request){
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:visitors,email|max:255',
+            'phone' => 'required|string|max:20',
+            'company' => 'nullable|string|max:255',
+            'host_name' => 'required|string|max:255',
+            'purpose' => 'required|string|max:500',
+            'visit_date' => 'required|date|after_or_equal:today',
+            'visit_type_id' => 'required|exists:visit_types,id',
+            'terms' => 'accepted',
+            'face_image' => 'nullable|string',
+        ]);
+
+        // Create or find visitor
+        $visitor = Visitor::firstOrCreate(
+            ['email' => $request->email],
+            [
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'address' => $request->company,
+                'is_blocked' => false,
+            ]
+        );
+
+        // Find or create host user by name
+        $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
+
+        if (!$hostUser) {
+            // If host doesn't exist, use current admin as default host
+            $hostUser = auth()->user();
+        }
+
+        // Create visit record
+        $visit = Visit::create([
+            'visitor_id' => $visitor->id,
+            'meeting_user_id' => $hostUser->id,
+            'visit_type_id' => $request->visit_type_id,
+            'purpose' => $request->purpose,
+            'schedule_time' => $request->visit_date,
+            'status' => 'approved', // Auto-approve when created by admin
+            'approved_at' => now(),
+        ]);
+
+        return redirect()->route('admin.visitor.registration.create')
+            ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!');
     }
 }
