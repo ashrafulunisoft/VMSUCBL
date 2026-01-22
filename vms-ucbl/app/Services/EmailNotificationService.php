@@ -5,35 +5,38 @@ namespace App\Services;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Jobs\SendVisitorRegistrationEmailJob;
+use App\Jobs\SendVisitStatusEmailJob;
 
 class EmailNotificationService
 {
     /**
-     * Send visitor registration confirmation email
+     * Send visitor registration confirmation email (queued)
      *
      * @param array $data
-     * @return bool
+     * @return bool - Returns true immediately (job dispatched)
      */
     public function sendVisitorRegistrationEmail(array $data): bool
     {
         try {
-            Log::info('Preparing to send visitor registration email', [
+            Log::info('Dispatching visitor registration email job', [
                 'visitor_email' => $data['visitor_email'] ?? 'N/A',
                 'visitor_name' => $data['visitor_name'] ?? 'N/A',
                 'visit_date' => $data['visit_date'] ?? 'N/A',
                 'sent_by' => Auth::user()->name ?? 'System'
             ]);
 
-            Mail::to($data['visitor_email'])->send(new \App\Mail\VisitorRegistrationEmail($data));
+            // Dispatch job to queue for async processing
+            SendVisitorRegistrationEmailJob::dispatch($data);
 
-            Log::info('Visitor registration email sent successfully', [
+            Log::info('Visitor registration email job dispatched successfully', [
                 'visitor_email' => $data['visitor_email'],
                 'visit_date' => $data['visit_date']
             ]);
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to send visitor registration email', [
+            Log::error('Failed to dispatch visitor registration email job', [
                 'error' => $e->getMessage(),
                 'visitor_email' => $data['visitor_email'] ?? 'N/A',
                 'trace' => $e->getTraceAsString()
@@ -44,30 +47,31 @@ class EmailNotificationService
     }
 
     /**
-     * Send visit status update email
+     * Send visit status update email (queued)
      *
      * @param array $data
-     * @return bool
+     * @return bool - Returns true immediately (job dispatched)
      */
     public function sendVisitStatusEmail(array $data): bool
     {
         try {
-            Log::info('Preparing to send visit status email', [
+            Log::info('Dispatching visit status email job', [
                 'visitor_email' => $data['visitor_email'] ?? 'N/A',
                 'status' => $data['status'] ?? 'N/A',
                 'sent_by' => Auth::user()->name ?? 'System'
             ]);
 
-            Mail::to($data['visitor_email'])->send(new \App\Mail\VisitStatusEmail($data));
+            // Dispatch job to queue for async processing
+            SendVisitStatusEmailJob::dispatch($data);
 
-            Log::info('Visit status email sent successfully', [
+            Log::info('Visit status email job dispatched successfully', [
                 'visitor_email' => $data['visitor_email'],
                 'status' => $data['status']
             ]);
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to send visit status email', [
+            Log::error('Failed to dispatch visit status email job', [
                 'error' => $e->getMessage(),
                 'visitor_email' => $data['visitor_email'] ?? 'N/A',
                 'trace' => $e->getTraceAsString()
