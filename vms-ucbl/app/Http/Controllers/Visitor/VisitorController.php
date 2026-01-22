@@ -25,7 +25,7 @@ class VisitorController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('vms.visitor.index', compact('visits'));
+        return view('vms.backend.visitor.index', compact('visits'));
     }
 
     /**
@@ -36,7 +36,7 @@ class VisitorController extends Controller
         $users = User::where('status', 'active')->get();
         $visitTypes = VisitType::all();
 
-        return view('vms.visitor.create', compact('users', 'visitTypes'));
+        return view('vms.backend.visitor.create', compact('users', 'visitTypes'));
     }
 
     /**
@@ -140,7 +140,7 @@ class VisitorController extends Controller
     {
         $visit = Visit::with(['visitor', 'type', 'meetingUser'])->findOrFail($id);
 
-        return view('vms.visitor.show', compact('visit'));
+        return view('vms.backend.visitor.show', compact('visit'));
     }
 
     /**
@@ -152,7 +152,7 @@ class VisitorController extends Controller
         $users = User::where('status', 'active')->get();
         $visitTypes = VisitType::all();
 
-        return view('vms.visitor.edit', compact('visit', 'users', 'visitTypes'));
+        return view('vms.backend.visitor.edit', compact('visit', 'users', 'visitTypes'));
     }
 
     /**
@@ -348,6 +348,6 @@ class VisitorController extends Controller
                                          ->count(),
         ];
 
-        return view('vms.visitor.statistics', compact('stats'));
+        return view('vms.backend.visitor.statistics', compact('stats'));
     }
 }

@@ -61,11 +61,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:receptionist'])->group(function () {
-    // dd("This is the dashboard page for receptionist");
-    Route::get('/receptionist/dashboard', function () {
-        return "This is the dashboard page for receptionist";
-    })->name('receptionist.dashboard');
-    // Route::get('/receptionist/dashboard', fn () => view('receptionist.dashboard'))
+    // dd("This is the dashboard page for receptionist")->name('receptionist.dashboard'    );
+    // Route::get('/receptionist/dashboard', [App\Http\Controllers\Receptionist\ReceptionistController::class, 'dashboard'])
     //     ->name('receptionist.dashboard');
 });
 
