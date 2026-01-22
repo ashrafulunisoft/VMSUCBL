@@ -10,6 +10,7 @@ use App\Models\Visit;
 use App\Models\VisitType;
 use App\Notifications\VisitorRegistered;
 use App\Services\EmailNotificationService;
+use App\Services\SmsNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -223,22 +224,30 @@ class AdminController extends Controller
             }
 
             // Send SMS notification if phone number exists
-            if ($visitor->phone && config('sms.enabled')) {
-                $visitDate = \Carbon\Carbon::parse($visit->schedule_time)->format('M j, Y g:i A');
-                $smsMessage = "UCB Bank: Visit confirmed on {$visitDate}. "
-                              . "Status: " . ucfirst($visit->status) . ". "
-                              . "Arrive 10 mins early. Questions? Contact us.";
+            if ($visitor->phone) {
+                // Prepare SMS data
+                $smsData = [
+                    'visitor_name' => $visitor->name,
+                    'visitor_phone' => $visitor->phone,
+                    'visitor_email' => $visitor->email,
+                    'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+                    'visit_type' => $visit->type->name ?? 'N/A',
+                    'host_name' => $hostUser->name,
+                    'status' => $visit->status,
+                ];
 
-                $smsSent = NotificationHelper::sendSms($visitor->phone, $smsMessage);
+                // Use SmsNotificationService to send SMS
+                $smsService = new SmsNotificationService();
+                $smsSent = $smsService->sendVisitorRegistrationSms($smsData);
 
                 if ($smsSent) {
-                    Log::info('SMS notification sent successfully', [
+                    Log::info('SMS notification dispatched successfully', [
                         'visit_id' => $visit->id,
                         'visitor_phone' => $visitor->phone,
                         'sent_at' => now()->toDateTimeString()
                     ]);
                 } else {
-                    Log::error('Failed to send SMS notification', [
+                    Log::error('Failed to dispatch SMS notification', [
                         'visit_id' => $visit->id,
                         'visitor_phone' => $visitor->phone
                     ]);
@@ -402,6 +411,7 @@ class AdminController extends Controller
 
             // Send status update email if status changed
             if ($oldStatus !== $visit->status) {
+                // Send email notification
                 $emailData = [
                     'visitor_name' => $visitor->name,
                     'visitor_email' => $visitor->email,
@@ -430,6 +440,34 @@ class AdminController extends Controller
                         'visitor_email' => $visitor->email,
                         'status' => $visit->status
                     ]);
+                }
+
+                // Send SMS notification if phone number exists
+                if ($visitor->phone) {
+                    $smsData = [
+                        'visitor_name' => $visitor->name,
+                        'visitor_phone' => $visitor->phone,
+                        'visitor_email' => $visitor->email,
+                        'status' => $visit->status,
+                    ];
+
+                    $smsService = new SmsNotificationService();
+                    $smsSent = $smsService->sendVisitStatusSms($smsData);
+
+                    if ($smsSent) {
+                        Log::info('Visit status SMS dispatched successfully', [
+                            'visit_id' => $visit->id,
+                            'visitor_phone' => $visitor->phone,
+                            'status' => $visit->status,
+                            'sent_at' => now()->toDateTimeString()
+                        ]);
+                    } else {
+                        Log::error('Failed to dispatch visit status SMS', [
+                            'visit_id' => $visit->id,
+                            'visitor_phone' => $visitor->phone,
+                            'status' => $visit->status
+                        ]);
+                    }
                 }
             }
 

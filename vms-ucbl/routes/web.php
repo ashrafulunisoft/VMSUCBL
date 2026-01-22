@@ -264,6 +264,28 @@ Route::get('/test-visitor-email', function () {
 })->name('test.visitor.email');
 
 // -------------------------------------------------------------------------
+// Test SMS route
+Route::get('/test-sms', function () {
+    $smsService = new \App\Services\SmsNotificationService();
+
+    $phone = '8801859385787'; // Test phone number (format: 880XXXXXXXXXX)
+    $message = 'Sharmin I Love YOu ...!';
+    // $message = 'This is a test SMS from VMS UCBL system. If you receive this, SMS is working!';
+
+    try {
+        $result = $smsService->send($phone, $message);
+
+        if ($result['success']) {
+            return '✅ SMS sent successfully to ' . $phone . '! Check your phone.';
+        } else {
+            return '❌ Failed to send SMS: ' . $result['message'];
+        }
+    } catch (\Exception $e) {
+        return '❌ Error: ' . $e->getMessage();
+    }
+})->name('test.sms');
+
+// -------------------------------------------------------------------------
 // Route::middleware([
 //     'auth:sanctum',
 //     config('jetstream.auth_session'),
