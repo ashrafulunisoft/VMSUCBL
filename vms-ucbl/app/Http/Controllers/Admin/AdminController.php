@@ -170,6 +170,46 @@ class AdminController extends Controller
         return response()->json($users);
     }
 
+    public function checkVisitor(Request $request)
+    {
+        $email = $request->get('email');
+        $visitor = Visitor::where('email', $email)->first();
+
+        if ($visitor) {
+            return response()->json([
+                'success' => true,
+                'visitor' => [
+                    'name' => $visitor->name,
+                    'email' => $visitor->email,
+                    'phone' => $visitor->phone,
+                    'company' => $visitor->address,
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => false]);
+    }
+
+    public function checkVisitorByPhone(Request $request)
+    {
+        $phone = $request->get('phone');
+        $visitor = Visitor::where('phone', $phone)->first();
+
+        if ($visitor) {
+            return response()->json([
+                'success' => true,
+                'visitor' => [
+                    'name' => $visitor->name,
+                    'email' => $visitor->email,
+                    'phone' => $visitor->phone,
+                    'company' => $visitor->address,
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => false]);
+    }
+
     public function visitorList()
     {
         $visitors = Visit::with(['visitor', 'type', 'meetingUser'])

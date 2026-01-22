@@ -196,6 +196,87 @@
         document.getElementById('visitDate').min = new Date().toISOString().split('T')[0];
         document.getElementById('visitDate').valueAsDate = new Date();
 
+        // Email Auto-fill for existing visitors
+        const emailInput = document.querySelector('input[name="email"]');
+        const nameInput = document.querySelector('input[name="name"]');
+        const phoneInput = document.querySelector('input[name="phone"]');
+        const companyInput = document.querySelector('input[name="company"]');
+        let emailDebounceTimer;
+
+        // Check visitor and auto-fill by email
+        const checkVisitorByEmail = debounce(async (email) => {
+            if (!email || email.length < 3) return;
+
+            try {
+                const response = await fetch(`{{ route('admin.visitor.registration.check-visitor') }}?email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+
+                if (data.success && data.visitor) {
+                    // Auto-fill visitor data
+                    nameInput.value = data.visitor.name;
+                    phoneInput.value = data.visitor.phone || '';
+                    companyInput.value = data.visitor.company || '';
+
+                    // Show notification
+                    Swal.fire({
+                        title: 'Visitor Found!',
+                        text: 'Visitor information auto-filled from database',
+                        icon: 'info',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3b82f6',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking visitor:', error);
+            }
+        }, 500);
+
+        // Check visitor and auto-fill by phone
+        const checkVisitorByPhone = debounce(async (phone) => {
+            if (!phone || phone.length < 3) return;
+
+            try {
+                const response = await fetch(`{{ route('admin.visitor.registration.check-visitor-phone') }}?phone=${encodeURIComponent(phone)}`);
+                const data = await response.json();
+
+                if (data.success && data.visitor) {
+                    // Auto-fill visitor data
+                    nameInput.value = data.visitor.name;
+                    emailInput.value = data.visitor.email || '';
+                    companyInput.value = data.visitor.company || '';
+
+                    // Show notification
+                    Swal.fire({
+                        title: 'Visitor Found!',
+                        text: 'Visitor information auto-filled from database',
+                        icon: 'info',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3b82f6',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking visitor by phone:', error);
+            }
+        }, 500);
+
+        // Email input event listener with debounce
+        emailInput.addEventListener('input', (e) => {
+            checkVisitorByEmail(e.target.value);
+        });
+
+        // Phone input event listener with debounce
+        phoneInput.addEventListener('input', (e) => {
+            checkVisitorByPhone(e.target.value);
+        });
+
         // Host Name Autocomplete
         const hostInput = document.getElementById('host_name');
         const suggestionsBox = document.getElementById('host-suggestions');

@@ -52,6 +52,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/visitor/registration/create', [AdminController::class, 'createVisitorRegistration'])->name('admin.visitor.registration.create');
     Route::post('/admin/visitor/registration/store', [AdminController::class, 'storeVisitorRegistration'])->name('admin.visitor.registration.store');
     Route::get('/admin/visitor/registration/search-host', [AdminController::class, 'searchHost'])->name('admin.visitor.registration.search-host');
+    Route::get('/admin/visitor/registration/check-visitor', [AdminController::class, 'checkVisitor'])->name('admin.visitor.registration.check-visitor');
+    Route::get('/admin/visitor/registration/check-visitor-phone', [AdminController::class, 'checkVisitorByPhone'])->name('admin.visitor.registration.check-visitor-phone');
     Route::get('/admin/visitor/list', [AdminController::class, 'visitorList'])->name('admin.visitor.list');
     Route::get('/admin/visitor/{id}/edit', [AdminController::class, 'editVisitor'])->name('admin.visitor.edit');
     Route::post('/admin/visitor/{id}/update', [AdminController::class, 'updateVisitor'])->name('admin.visitor.update');
