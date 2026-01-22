@@ -24,28 +24,28 @@
                 <div class="col-md-6">
                     <label class="form-label">Full Name *</label>
                     <div class="position-relative">
-                        <input type="text" name="name" class="input-dark input-custom" placeholder="Enter your full name" required>
+                        <input type="text" name="name" class="input-dark input-custom" placeholder="Enter your full name" value="{{ old('name') }}" required>
                         <i class="fas fa-user input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Email Address *</label>
                     <div class="position-relative">
-                        <input type="email" name="email" class="input-dark input-custom" placeholder="name@email.com" required>
+                        <input type="email" name="email" class="input-dark input-custom" placeholder="name@email.com" value="{{ old('email') }}" required>
                         <i class="fas fa-envelope input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Phone Number</label>
                     <div class="position-relative">
-                        <input type="tel" name="phone" class="input-dark input-custom" placeholder="+880 1XXX-XXXXXX">
+                        <input type="tel" name="phone" class="input-dark input-custom" placeholder="+880 1XXX-XXXXXX" value="{{ old('phone') }}">
                         <i class="fas fa-phone input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Company/Organization</label>
                     <div class="position-relative">
-                        <input type="text" name="company" class="input-dark input-custom" placeholder="Enter company name">
+                        <input type="text" name="company" class="input-dark input-custom" placeholder="Enter company name" value="{{ old('company') }}">
                         <i class="fas fa-building input-icon"></i>
                     </div>
                 </div>
@@ -62,6 +62,7 @@
                                id="host_name"
                                class="input-dark input-custom"
                                placeholder="Meeting with whom?"
+                               value="{{ old('host_name') }}"
                                required
                                autocomplete="off">
                         <i class="fas fa-user-tie input-icon"></i>
@@ -73,21 +74,21 @@
                     <select name="visit_type_id" class="input-dark input-custom" required>
                         <option value="" disabled selected>Select visit type</option>
                         @foreach($visitTypes as $type)
-                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        <option value="{{ $type->id }}" {{ old('visit_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Purpose of Visit *</label>
                     <div class="position-relative">
-                        <input type="text" name="purpose" class="input-dark input-custom" placeholder="Nature of visit" required>
+                        <input type="text" name="purpose" class="input-dark input-custom" placeholder="Nature of visit" value="{{ old('purpose') }}" required>
                         <i class="fas fa-briefcase input-icon"></i>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Visit Date *</label>
                     <div class="position-relative">
-                        <input type="date" name="visit_date" class="input-dark input-custom" id="visitDate" required>
+                        <input type="date" name="visit_date" class="input-dark input-custom" id="visitDate" value="{{ old('visit_date') ?? date('Y-m-d') }}" required>
                     </div>
                 </div>
             </div>
@@ -104,9 +105,9 @@
 
             <!-- Terms -->
             <div class="form-check mt-4" style="display: flex; align-items: flex-start; gap: 10px;">
-                <input class="form-check-input" type="checkbox" id="terms" name="terms" value="accepted" required style="margin-top: 5px; width: 20px; height: 20px; cursor: pointer;">
+                <input class="form-check-input" type="checkbox" id="terms" name="terms" value="accepted" {{ old('terms') == 'accepted' ? 'checked' : '' }} required style="margin-top: 5px; width: 20px; height: 20px; cursor: pointer;">
                 <label class="form-check-label" for="terms" style="font-size: 13px; color: var(--text-muted);">
-                    I agree to the <a href="#" style="color: var(--accent-blue); text-decoration: none;">visitor terms and conditions</a> and privacy policy.
+                    I agree to <a href="#" style="color: var(--accent-blue); text-decoration: none;">visitor terms and conditions</a> and privacy policy.
                 </label>
             </div>
 
@@ -337,17 +338,6 @@
         const registrationForm = document.getElementById('registrationForm');
         registrationForm.addEventListener('submit', function(e) {
             e.preventDefault();
-
-            if (!stream) {
-                Swal.fire({
-                    title: 'Face Authentication Required',
-                    text: 'Please enable webcam for face authentication before submitting.',
-                    icon: 'warning',
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#f59e0b'
-                });
-                return;
-            }
 
             const btn = document.getElementById('registerBtn');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
