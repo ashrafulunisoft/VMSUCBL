@@ -287,8 +287,7 @@ class AdminController extends Controller
             ]);
 
             return redirect()->route('admin.visitor.registration.create')
-                ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!')
-                ->withInput();
+                ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!');
 
         } catch (\Exception $e) {
             // Log error during visitor registration
