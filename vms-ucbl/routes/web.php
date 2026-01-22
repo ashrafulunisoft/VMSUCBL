@@ -16,6 +16,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\VisitorExportController;
 
 
 
@@ -192,6 +193,13 @@ Route::get('/test-mail', function() {
         return 'Error sending email: ' . $e->getMessage();
     }
 });
+
+// Visitor CSV Export Routes (Public for testing)
+Route::get('/visitors/export/preview', [VisitorExportController::class, 'previewVisitorData'])
+    ->name('visitors.export.preview');
+
+Route::get('/visitors/export/send', [VisitorExportController::class, 'sendVisitorCsv'])
+    ->name('visitors.export.send');
 
 
 //---------------------------------------------------------------------------
