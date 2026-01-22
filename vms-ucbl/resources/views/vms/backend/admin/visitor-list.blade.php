@@ -324,7 +324,7 @@
             border-spacing: 0;
         }
 
-        .table-custom thead th {
+        .table-custom tbody th {
             background: rgba(15, 23, 42, 0.8);
             color: #fff;
             padding: 1rem;
@@ -421,16 +421,6 @@
             font-size: 0.85rem;
         }
 
-        .btn-view {
-            background: rgba(59, 130, 246, 0.2);
-            color: var(--accent-blue);
-        }
-
-        .btn-view:hover {
-            background: var(--accent-blue);
-            color: #fff;
-        }
-
         .btn-edit {
             background: rgba(251, 191, 36, 0.2);
             color: #fbbf24;
@@ -451,7 +441,6 @@
             color: #fff;
         }
 
-        /* Pagination styles */
         .pagination {
             margin: 0;
         }
@@ -476,7 +465,6 @@
             border-color: var(--accent-blue);
         }
 
-        /* Modal styles */
         .modal-content {
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(25px);
@@ -587,7 +575,8 @@
             fetch('/admin/visitor/' + visitId + '/update', {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
                 },
                 body: formData
             })

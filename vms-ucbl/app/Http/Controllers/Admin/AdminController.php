@@ -10,6 +10,7 @@ use App\Models\VisitType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -201,42 +202,53 @@ class AdminController extends Controller
             'status' => 'required|in:approved,pending,completed,cancelled',
         ]);
 
-        $visit = Visit::findOrFail($id);
+        try {
+            $visit = Visit::findOrFail($id);
 
-        // Update visitor information
-        $visitor = Visitor::findOrFail($visit->visitor_id);
-        $visitor->update([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'address' => $request->company,
-        ]);
-
-        // Find host user
-        $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
-        if (!$hostUser) {
-            $hostUser = Auth::user();
-        }
-
-        // Update visit
-        $visit->update([
-            'meeting_user_id' => $hostUser->id,
-            'visit_type_id' => $request->visit_type_id,
-            'purpose' => $request->purpose,
-            'schedule_time' => $request->visit_date,
-            'status' => $request->status,
-            'approved_at' => $request->status === 'approved' ? now() : $visit->approved_at,
-        ]);
-
-        // Check if request expects JSON (AJAX)
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Visit updated successfully!'
+            // Update visitor information
+            $visitor = Visitor::findOrFail($visit->visitor_id);
+            $visitor->update([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'address' => $request->company,
             ]);
-        }
 
-        return redirect()->route('admin.visitor.list')
-            ->with('success', 'Visit updated successfully!');
+            // Find host user
+            $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
+            if (!$hostUser) {
+                $hostUser = Auth::user();
+            }
+
+            // Update visit
+            $visit->update([
+                'meeting_user_id' => $hostUser->id,
+                'visit_type_id' => $request->visit_type_id,
+                'purpose' => $request->purpose,
+                'schedule_time' => $request->visit_date,
+                'status' => $request->status,
+                'approved_at' => $request->status === 'approved' ? now() : $visit->approved_at,
+            ]);
+
+            // Check if request expects JSON (AJAX)
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Visit updated successfully!'
+                ]);
+            }
+
+            return redirect()->route('admin.visitor.list')
+                ->with('success', 'Visit updated successfully!');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function deleteVisitor($id)
