@@ -156,7 +156,8 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.visitor.registration.create')
-            ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!');
+            ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!')
+            ->withInput();
     }
 
     public function searchHost(Request $request)
