@@ -115,13 +115,12 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:visitors,email|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => 'nullable|string|max:20',
             'company' => 'nullable|string|max:255',
             'host_name' => 'required|string|max:255',
             'purpose' => 'required|string|max:500',
             'visit_date' => 'required|date|after_or_equal:today',
             'visit_type_id' => 'required|exists:visit_types,id',
-            'terms' => 'accepted',
             'face_image' => 'nullable|string',
         ]);
 
@@ -141,7 +140,7 @@ class AdminController extends Controller
 
         if (!$hostUser) {
             // If host doesn't exist, use current admin as default host
-            $hostUser = auth()->user();
+            $hostUser = Auth::user();
         }
 
         // Create visit record
@@ -156,7 +155,8 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.visitor.registration.create')
-            ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!');
+            ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!')
+            ->withInput();
     }
 
     public function searchHost(Request $request)
@@ -167,5 +167,86 @@ class AdminController extends Controller
                     ->get(['id', 'name']);
 
         return response()->json($users);
+    }
+
+    public function visitorList()
+    {
+        $visitors = Visit::with(['visitor', 'type', 'meetingUser'])
+                         ->orderBy('created_at', 'desc')
+                         ->paginate(10);
+
+        return view('vms.backend.admin.visitor-list', compact('visitors'));
+    }
+
+    public function editVisitor($id)
+    {
+        $visit = Visit::with(['visitor', 'type', 'meetingUser'])->findOrFail($id);
+        $users = User::all();
+        $visitTypes = VisitType::all();
+
+        return view('vms.backend.admin.edit-visitor', compact('visit', 'users', 'visitTypes'));
+    }
+
+    public function updateVisitor(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'company' => 'nullable|string|max:255',
+            'host_name' => 'required|string|max:255',
+            'purpose' => 'required|string|max:500',
+            'visit_date' => 'required|date|after_or_equal:today',
+            'visit_type_id' => 'required|exists:visit_types,id',
+            'status' => 'required|in:approved,pending,completed,cancelled',
+        ]);
+
+        $visit = Visit::findOrFail($id);
+
+        // Update visitor information
+        $visitor = Visitor::findOrFail($visit->visitor_id);
+        $visitor->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'address' => $request->company,
+        ]);
+
+        // Find host user
+        $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
+        if (!$hostUser) {
+            $hostUser = Auth::user();
+        }
+
+        // Update visit
+        $visit->update([
+            'meeting_user_id' => $hostUser->id,
+            'visit_type_id' => $request->visit_type_id,
+            'purpose' => $request->purpose,
+            'schedule_time' => $request->visit_date,
+            'status' => $request->status,
+            'approved_at' => $request->status === 'approved' ? now() : $visit->approved_at,
+        ]);
+
+        // Check if request expects JSON (AJAX)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Visit updated successfully!'
+            ]);
+        }
+
+        return redirect()->route('admin.visitor.list')
+            ->with('success', 'Visit updated successfully!');
+    }
+
+    public function deleteVisitor($id)
+    {
+        $visit = Visit::findOrFail($id);
+        $visit->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Visit deleted successfully!'
+        ]);
     }
 }
