@@ -2,15 +2,91 @@
 
 use App\Models\User;
 
+use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Password;
+use Spatie\Permission\Models\Permission;
 use App\Http\Controllers\ProfileController;
+
+//for create role and permission :
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\PasswordResetController;
-use App\Http\Controllers\Test\TestController;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
+
+
+
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Those use for role base redirection .
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/dashboard', function () {
+    "This is the dashboard page for no roles";
+    return view('dashboard'); // dummy view (never actually shown)
+})->middleware(['auth', 'verified', 'role.redirect'])
+  ->name('dashboard');
+
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Role-wise Dashboards
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/role/create', [AdminController::class, 'createRole'])->name('admin.role.create');
+    Route::post('/admin/role/store', [AdminController::class, 'storeRole'])->name('admin.role.store');
+    Route::get('/admin/role/assign/create', [AdminController::class, 'createAssignRole'])->name('admin.role.assign.create');
+    Route::post('/admin/role/assign/store', [AdminController::class, 'storeAssignRole'])->name('admin.role.assign.store');
+    Route::post('/admin/role/assign/remove', [AdminController::class, 'removeUserRole'])->name('admin.role.assign.remove');
+    Route::get('/admin/visitor/registration/create', [AdminController::class, 'createVisitorRegistration'])->name('admin.visitor.registration.create');
+    Route::post('/admin/visitor/registration/store', [AdminController::class, 'storeVisitorRegistration'])->name('admin.visitor.registration.store');
+    Route::get('/admin/visitor/registration/search-host', [AdminController::class, 'searchHost'])->name('admin.visitor.registration.search-host');
+});
+
+Route::middleware(['auth', 'role:receptionist'])->group(function () {
+    // dd("This is the dashboard page for receptionist");
+    Route::get('/receptionist/dashboard', function () {
+        return "This is the dashboard page for receptionist";
+    })->name('receptionist.dashboard');
+    // Route::get('/receptionist/dashboard', fn () => view('receptionist.dashboard'))
+    //     ->name('receptionist.dashboard');
+});
+
+Route::middleware(['auth', 'role:visitor'])->group(function () {
+    //  dd("This is the dashboard page for visitor");
+    Route::get('/visitor/dashboard', function () {
+        return "This is the dashboard page for visitor";
+    })->name('visitor.dashboard');
+    // Route::get('/visitor/dashboard', fn () => view('visitor.dashboard'))
+    //     ->name('visitor.dashboard');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Fallback (any other role → staff)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
+    //  dd("This is the dashboard page for staff");
+    Route::get('/staff/dashboard', function () {
+        return "This is the dashboard page for staff";
+    })->name('staff.dashboard');
+    // Route::get('/staff/dashboard', fn () => view('staff.dashboard'))
+    //     ->name('staff.dashboard');
+});
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -21,9 +97,18 @@ use Illuminate\Support\Facades\Password;
 
 Route::get('/', function(){
 
+
+// Role::create(['name' => 'admin']);
+// Role::create(['name' => 'staff']);
+// Role::create(['name' => 'receptionist']);
+// Role::create(['name' => 'visitor']);
+
+// dd(Role::all());
 //---------- add role to any user --------------------------
-    // $user = User::latest()->first();
+    // $user = User::where('name','Staff')->first();
+    // // dd($user);
     // $user->assignRole('staff');
+    // dd($user->getRoleNames());
     // $user->removeRole('staff');
 
     // dd($user->getRoleNames());
@@ -112,13 +197,19 @@ Route::get('/test-mail', function() {
 });
 
 
+//---------------------------------------------------------------------------
+//for logout :
 
 
+Route::get('/test', function () {
+    return "Test File";
+    return redirect('/login');
+});
 
-//----------------- Only for the test ----------------------
-
-Route::get('/play',[App\Http\Controllers\Test\TestController::class,'play']);
-Route::post('/upload',[App\Http\Controllers\Test\TestController::class,'upload'])->name('upload');
+Route::get('/logout', function () {
+    Auth::logout();
+    return redirect('/login');
+});
 
 
 
