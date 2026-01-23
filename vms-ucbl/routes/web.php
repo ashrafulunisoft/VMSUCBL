@@ -322,13 +322,21 @@ Route::get('/test-sms', function () {
     }
 })->name('test.sms');
 
-// -------------------------------------------------------------------------
-// Route::middleware([
-//     'auth:sanctum',
-//     config('jetstream.auth_session'),
-//     'verified',
-// ])->group(function () {
-//     Route::get('/dashboard', function () {
-//         return view('dashboard');
-//     })->name('dashboard');
-// });
+    // API Routes (no authentication for public access if needed)
+    Route::get('/api/visitors/live', [App\Http\Controllers\Visitor\VisitorController::class, 'liveVisitorsApi'])->name('api.visitors.live');
+
+    // API Routes for host pending visits (with permission check)
+    Route::middleware(['auth', 'permission:approve visit'])->group(function () {
+        Route::get('/api/host-pending-visits', [App\Http\Controllers\Visitor\VisitorController::class, 'hostPendingVisitsApi'])->name('api.host.pending.visits');
+    });
+
+    // -------------------------------------------------------------------------
+    // Route::middleware([
+    //     'auth:sanctum',
+    //     config('jetstream.auth_session'),
+    //     'verified',
+    // ])->group(function () {
+    //     Route::get('/dashboard', function () {
+    //         return view('dashboard');
+    //     })->name('dashboard');
+    // });

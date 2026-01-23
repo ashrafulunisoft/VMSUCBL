@@ -468,6 +468,113 @@
         .border-dashed { border-style: dashed; }
         .border-orange { border-color: orange; }
         .cursor-pointer { cursor: pointer; }
+
+        /* Notification Panel Styles */
+        .notification-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-left: 1px solid var(--glass-border);
+            padding: 2rem;
+            z-index: 1060;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+
+        .notification-panel.show {
+            right: 0;
+        }
+
+        .notification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1055;
+        }
+
+        .notification-list {
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            transition: 0.3s;
+        }
+
+        .notification-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .notification-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-blue));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .btn-accept {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-accept:hover {
+            background: rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-reject {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-reject:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-outline-light {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        @media (max-width: 576px) {
+            .notification-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -547,6 +654,17 @@
                 </div>
                 @endcan
 
+                <!-- Notification Bell for Hosts -->
+                @can('approve visit')
+                <a href="#" class="sidebar-item d-flex align-items-center justify-content-between" onclick="event.preventDefault(); toggleNotificationPanel()">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-bell"></i>
+                        <span>Notifications</span>
+                    </div>
+                    <span id="notification-badge" class="badge bg-danger rounded-pill" style="display: none;">0</span>
+                </a>
+                @endcan
+
                 <!-- Visit Management - Permission Based -->
                 @can('view visitors')
                 <div class="sidebar-dropdown">
@@ -556,25 +674,25 @@
                     </a>
                     <div class="sidebar-submenu" id="visit-submenu">
                         @can('view visitors')
-                        <a href="#" class="submenu-item">
+                        <a href="{{ route('visitor.history') }}" class="submenu-item">
                             <i class="fas fa-history"></i> Visit History
                         </a>
                         @endcan
 
                         @can('view visitors')
-                        <a href="#" class="submenu-item">
+                        <a href="{{ route('visitor.active') }}" class="submenu-item">
                             <i class="fas fa-clock"></i> Active Visits
                         </a>
                         @endcan
 
                         @can('edit visitors')
-                        <a href="#" class="submenu-item">
+                        <a href="{{ route('visitor.approved') }}" class="submenu-item">
                             <i class="fas fa-check-circle"></i> Approved Visits
                         </a>
                         @endcan
 
                         @can('edit visitors')
-                        <a href="#" class="submenu-item">
+                        <a href="{{ route('visitor.checkin-checkout') }}" class="submenu-item">
                             <i class="fas fa-user-check"></i> Check-in/Check-out
                         </a>
                         @endcan
@@ -624,6 +742,24 @@
             </div>
         </div>
 
+        <!-- Notification Panel -->
+        <div id="notification-panel" class="notification-panel" style="display: none;">
+            <div class="notification-panel-header d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-800 text-white">Pending Approvals</h5>
+                <button class="btn btn-close btn-close-white" onclick="toggleNotificationPanel()"></button>
+            </div>
+            <div id="notification-list" class="notification-list">
+                <!-- Notifications will be loaded here -->
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-spinner fa-spin mb-2"></i>
+                    <p class="small mb-0">Loading notifications...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Panel Overlay -->
+        <div id="notification-overlay" class="notification-overlay" style="display: none;" onclick="toggleNotificationPanel()"></div>
+
         <!-- Main Content -->
         <div class="main-container">
             @yield('content')
@@ -641,6 +777,189 @@
             document.getElementById('sidebar').classList.toggle('show');
             document.getElementById('sidebarOverlay').classList.toggle('show');
         }
+
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notification-panel');
+            const overlay = document.getElementById('notification-overlay');
+
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                overlay.style.display = 'block';
+                loadNotifications();
+            } else {
+                panel.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+        }
+
+        function loadNotifications() {
+            const notificationList = document.getElementById('notification-list');
+
+            fetch('/api/host-pending-visits')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.visits.length > 0) {
+                        let html = '';
+                        data.visits.forEach(visit => {
+                            html += `
+                                <div class="notification-item" data-visit-id="${visit.id}">
+                                    <div class="d-flex gap-3">
+                                        <div class="notification-avatar">
+                                            ${visit.visitor.name.charAt(0)}
+                                        </div>
+                                        <div class="flex-1">
+                                            <h6 class="fw-bold mb-1 text-white">${visit.visitor.name}</h6>
+                                            <p class="small text-muted mb-1">${visit.purpose}</p>
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <small class="text-info">
+                                                    <i class="fas fa-calendar"></i>
+                                                    ${new Date(visit.schedule_time).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}
+                                                </small>
+                                                <small class="text-warning">
+                                                    <i class="fas fa-clock"></i>
+                                                    ${new Date(visit.schedule_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}
+                                                </small>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-accept" onclick="approveFromNotification(${visit.id})">
+                                                    <i class="fas fa-check me-1"></i> Approve
+                                                </button>
+                                                <button class="btn btn-sm btn-reject" onclick="rejectFromNotification(${visit.id})">
+                                                    <i class="fas fa-times me-1"></i> Reject
+                                                </button>
+                                                <a href="/visitor/${visit.id}" class="btn btn-sm btn-outline-light btn-sm">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        notificationList.innerHTML = html;
+                    } else {
+                        notificationList.innerHTML = `
+                            <div class="text-center py-4">
+                                <i class="fas fa-check-circle text-success mb-2" style="font-size: 2rem;"></i>
+                                <p class="text-muted mb-0">No pending approvals</p>
+                            </div>
+                        `;
+                    }
+
+                    // Update badge
+                    const badge = document.getElementById('notification-badge');
+                    if (data.visits.length > 0) {
+                        badge.textContent = data.visits.length;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    notificationList.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-circle text-danger mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-0">Failed to load notifications</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function approveFromNotification(visitId) {
+            Swal.fire({
+                title: 'Approve Visit?',
+                text: 'This will approve the visit and generate an RFID badge.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#22c55e',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, approve!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/visits/${visitId}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Approved!', data.message, 'success');
+                            loadNotifications();
+                        } else {
+                            Swal.fire('Error!', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error!', 'Failed to approve visit', 'error');
+                    });
+                }
+            });
+        }
+
+        function rejectFromNotification(visitId) {
+            Swal.fire({
+                title: 'Reject Visit?',
+                input: 'textarea',
+                inputLabel: 'Reason for rejection',
+                inputPlaceholder: 'Please enter the reason...',
+                inputAttributes: {
+                    'aria-label': 'Type your reason here'
+                },
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, reject!',
+                preConfirm: (reason) => {
+                    if (!reason) {
+                        Swal.showValidationMessage('Please enter a reason for rejection');
+                        return false;
+                    }
+                    return reason;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/visits/${visitId}/reject`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            reason: result.value
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Rejected!', data.message, 'success');
+                            loadNotifications();
+                        } else {
+                            Swal.fire('Error!', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error!', 'Failed to reject visit', 'error');
+                    });
+                }
+            });
+        }
+
+        // Load notification count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/host-pending-visits')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('notification-badge');
+                    if (data.success && data.visits.length > 0) {
+                        badge.textContent = data.visits.length;
+                        badge.style.display = 'inline-block';
+                    }
+                });
+        });
     </script>
 
     @stack('scripts')

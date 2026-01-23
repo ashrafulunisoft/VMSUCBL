@@ -838,6 +838,23 @@ class VisitorController extends Controller
     }
 
     /**
+     * Get pending visits for current host (for notification panel)
+     */
+    public function hostPendingVisitsApi()
+    {
+        $visits = Visit::with(['visitor', 'meetingUser'])
+            ->where('status', 'pending_host')
+            ->where('meeting_user_id', Auth::id())
+            ->orderBy('schedule_time', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'visits' => $visits
+        ]);
+    }
+
+    /**
      * Display pending visits for approval
      */
     public function pendingVisits()
