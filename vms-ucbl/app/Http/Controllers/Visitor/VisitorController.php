@@ -9,10 +9,17 @@ use App\Models\Visit;
 use App\Models\VisitType;
 use App\Services\EmailNotificationService;
 use App\Services\SmsNotificationService;
+use App\Events\VisitWaitingForApproval;
+use App\Events\VisitApproved;
+use App\Events\VisitRejected;
+use App\Events\VisitCheckedIn;
+use App\Events\VisitCompleted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class VisitorController extends Controller
 {
@@ -143,17 +150,21 @@ class VisitorController extends Controller
                 ]);
             }
 
-            // Create visit record
+            // Generate OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Create visit record with OTP
             $visit = Visit::create([
                 'visitor_id' => $visitor->id,
                 'meeting_user_id' => $hostUser->id,
                 'visit_type_id' => $request->visit_type_id,
                 'purpose' => $request->purpose,
                 'schedule_time' => $request->visit_date,
-                'status' => 'pending', // Default to pending for non-admin
+                'status' => 'pending_otp',
+                'otp' => $otp,
             ]);
 
-            // Send email notification
+            // Send email notification with OTP
             $emailData = [
                 'visitor_name' => $visitor->name,
                 'visitor_email' => $visitor->email,
@@ -163,6 +174,7 @@ class VisitorController extends Controller
                 'visit_type' => $visit->type->name ?? 'N/A',
                 'purpose' => $visit->purpose,
                 'host_name' => $hostUser->name,
+                'otp' => $otp,
                 'status' => $visit->status,
             ];
 
@@ -173,7 +185,7 @@ class VisitorController extends Controller
             if (!empty($visitor->phone)) {
                 $smsMessage = "Dear {$visitor->name}, Your visit to UCB Bank has been registered for " .
                               \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A') .
-                              ". Host: {$hostUser->name}. Status: {$visit->status}. Thank you!";
+                              ". Host: {$hostUser->name}. Your OTP is: {$otp}. Use this to verify your visit. Thank you!";
 
                 $phone = preg_replace('/[^0-9]/', '', $visitor->phone);
                 if (strpos($phone, '880') !== 0) {
@@ -186,8 +198,8 @@ class VisitorController extends Controller
 
             DB::commit();
 
-            return redirect()->route('visitor.index')
-                ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!');
+            return redirect()->route('visitor.show', $visit->id)
+                ->with('success', 'Visitor ' . $visitor->name . ' registered successfully! OTP has been sent to their email.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -573,5 +585,344 @@ class VisitorController extends Controller
         ];
 
         return view('vms.backend.visitor.statistics', compact('stats'));
+    }
+
+    /**
+     * Show OTP verification form
+     */
+    public function showVerifyOtp($id)
+    {
+        $visit = Visit::with('visitor')->findOrFail($id);
+
+        return view('vms.backend.visitor.verify-otp', compact('visit'));
+    }
+
+    /**
+     * Verify OTP for visit
+     */
+    public function verifyOtp(Request $request, $id)
+    {
+        $request->validate([
+            'otp' => 'required|numeric|digits:6',
+        ]);
+
+        $visit = Visit::with(['visitor', 'meetingUser'])->findOrFail($id);
+
+        if ($visit->otp !== $request->otp) {
+            return back()->withErrors(['otp' => 'Invalid OTP. Please try again.']);
+        }
+
+        // Update visit status after OTP verification
+        $visit->update([
+            'otp' => null,
+            'otp_verified_at' => now(),
+            'status' => 'pending_host',
+        ]);
+
+        // Dispatch event for real-time updates
+        broadcast(new VisitWaitingForApproval($visit));
+
+        // Send notification email to host with approval link
+        $hostEmailData = [
+            'host_name' => $visit->meetingUser->name,
+            'visitor_name' => $visit->visitor->name,
+            'visitor_email' => $visit->visitor->email,
+            'visitor_phone' => $visit->visitor->phone,
+            'purpose' => $visit->purpose,
+            'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+            'visit_type' => $visit->type->name ?? 'N/A',
+            'approval_link' => route('visitor.show', $visit->id),
+        ];
+
+        try {
+            Mail::to($visit->meetingUser->email)->send(new \App\Mail\VisitApprovalRequestEmail($hostEmailData));
+        } catch (\Exception $e) {
+            Log::error('Failed to send host approval email', [
+                'error' => $e->getMessage(),
+                'visit_id' => $visit->id,
+            ]);
+        }
+
+        return redirect()->route('visitor.show', $visit->id)
+            ->with('success', 'OTP verified successfully. Your visit is now waiting for host approval. Host has been notified.');
+    }
+
+    /**
+     * Approve visit and generate RFID
+     */
+    public function approveVisit($id)
+    {
+        $visit = Visit::with(['visitor', 'meetingUser'])->findOrFail($id);
+
+        // Generate RFID
+        $rfid = 'RFID-' . strtoupper(Str::random(8));
+
+        $visit->update([
+            'status' => 'approved',
+            'rfid' => $rfid,
+            'approved_at' => now(),
+        ]);
+
+        // Dispatch event for real-time updates
+        broadcast(new VisitApproved($visit));
+
+        // Send email notification to visitor
+        $emailData = [
+            'visitor_name' => $visit->visitor->name,
+            'visitor_email' => $visit->visitor->email,
+            'rfid' => $rfid,
+            'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+            'host_name' => $visit->meetingUser->name,
+        ];
+
+        try {
+            Mail::to($visit->visitor->email)->send(new \App\Mail\VisitApprovedEmail($emailData));
+        } catch (\Exception $e) {
+            Log::error('Failed to send approval email', [
+                'error' => $e->getMessage(),
+                'visit_id' => $visit->id,
+            ]);
+        }
+
+        return back()->with('success', 'Visit approved successfully. RFID: ' . $rfid);
+    }
+
+    /**
+     * Reject visit
+     */
+    public function rejectVisit(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $visit = Visit::with(['visitor', 'meetingUser'])->findOrFail($id);
+
+        $visit->update([
+            'status' => 'rejected',
+            'rejected_reason' => $request->reason,
+        ]);
+
+        // Dispatch event for real-time updates
+        broadcast(new VisitRejected($visit));
+
+        // Send email notification to visitor
+        $emailData = [
+            'visitor_name' => $visit->visitor->name,
+            'visitor_email' => $visit->visitor->email,
+            'reason' => $request->reason,
+            'host_name' => $visit->meetingUser->name,
+        ];
+
+        try {
+            Mail::to($visit->visitor->email)->send(new \App\Mail\VisitRejectedEmail($emailData));
+        } catch (\Exception $e) {
+            Log::error('Failed to send rejection email', [
+                'error' => $e->getMessage(),
+                'visit_id' => $visit->id,
+            ]);
+        }
+
+        return back()->with('success', 'Visit rejected successfully.');
+    }
+
+    /**
+     * Check-in visitor
+     */
+    public function checkIn($id)
+    {
+        try {
+            $visit = Visit::findOrFail($id);
+
+            $user = auth()->user();
+            $hasPermission = $user ? $user->can('checkin visit') : false;
+
+            Log::info('Check-in attempt', [
+                'visit_id' => $id,
+                'current_status' => $visit->status,
+                'user_id' => auth()->id(),
+                'user_has_permission' => $hasPermission,
+            ]);
+
+            if ($visit->status !== 'approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Visit must be approved before check-in. Current status: ' . $visit->status,
+                ], 400);
+            }
+
+            $visit->update([
+                'status' => 'checked_in',
+                'checkin_time' => now(),
+            ]);
+
+            Log::info('Check-in successful', ['visit_id' => $id]);
+
+            // Dispatch event for real-time updates
+            broadcast(new VisitCheckedIn($visit));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Visitor checked in successfully.',
+                'checkin_time' => $visit->checkin_time->format('h:i A'),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Check-in error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'visit_id' => $id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Check-out visitor
+     */
+    public function checkOut($id)
+    {
+        $visit = Visit::findOrFail($id);
+
+        if ($visit->status !== 'checked_in') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Visitor must be checked in before check-out.',
+            ], 400);
+        }
+
+        $visit->update([
+            'status' => 'completed',
+            'checkout_time' => now(),
+        ]);
+
+        // Dispatch event for real-time updates
+        broadcast(new VisitCompleted($visit));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Visitor checked out successfully.',
+            'checkout_time' => $visit->checkout_time->format('h:i A'),
+        ]);
+    }
+
+    /**
+     * Live dashboard view
+     */
+    public function liveDashboard()
+    {
+        // Get all active visits for initial load
+        $visits = Visit::with(['visitor', 'meetingUser', 'type'])
+            ->whereIn('status', ['pending_host', 'approved', 'checked_in'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('vms.backend.visitor.live-dashboard', compact('visits'));
+    }
+
+    /**
+     * API endpoint for live dashboard data
+     */
+    public function liveVisitorsApi()
+    {
+        $visits = Visit::with(['visitor', 'meetingUser', 'type'])
+            ->whereIn('status', ['pending_host', 'approved', 'checked_in'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($visits);
+    }
+
+    /**
+     * Display pending visits for approval
+     */
+    public function pendingVisits()
+    {
+        $visits = Visit::with(['visitor', 'type', 'meetingUser'])
+            ->where('status', 'pending_host')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('vms.backend.visitor.pending', compact('visits'));
+    }
+
+    /**
+     * Display rejected visits
+     */
+    public function rejectedVisits()
+    {
+        $visits = Visit::with(['visitor', 'type', 'meetingUser'])
+            ->where('status', 'rejected')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('vms.backend.visitor.rejected', compact('visits'));
+    }
+
+    /**
+     * Display approved visits
+     */
+    public function approvedVisits()
+    {
+        $visits = Visit::with(['visitor', 'type', 'meetingUser'])
+            ->where('status', 'approved')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('vms.backend.visitor.approved', compact('visits'));
+    }
+
+    /**
+     * Display visit history
+     */
+    public function visitHistory()
+    {
+        $visitsQuery = Visit::with(['visitor', 'type', 'meetingUser'])
+            ->orderBy('created_at', 'desc');
+
+        // If user doesn't have view visitors permission, show only their own visits
+        if (!auth()->user()->can('view visitors')) {
+            $visitsQuery->where('meeting_user_id', auth()->id());
+        }
+
+        $visits = $visitsQuery->paginate(10);
+
+        return view('vms.backend.visitor.history', compact('visits'));
+    }
+
+    /**
+     * Display active visits (checked_in)
+     */
+    public function activeVisits()
+    {
+        $visits = Visit::with(['visitor', 'type', 'meetingUser'])
+            ->where('status', 'checked_in')
+            ->orderBy('checkin_time', 'desc')
+            ->paginate(10);
+
+        return view('vms.backend.visitor.active', compact('visits'));
+    }
+
+    /**
+     * Display check-in/check-out panel
+     */
+    public function checkinCheckout()
+    {
+        $visitsQuery = Visit::with(['visitor', 'type', 'meetingUser'])
+            ->whereIn('status', ['approved', 'checked_in'])
+            ->orderBy('created_at', 'desc');
+
+        // If user doesn't have edit visitors permission, show only their own visits
+        if (!auth()->user()->can('edit visitors')) {
+            $visitsQuery->where('meeting_user_id', auth()->id());
+        }
+
+        $visits = $visitsQuery->paginate(10);
+
+        return view('vms.backend.visitor.checkin-checkout', compact('visits'));
     }
 }

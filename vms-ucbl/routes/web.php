@@ -244,14 +244,22 @@ Route::get('/test-visitor-email', function () {
 // -------------------------------------------------------------------------
 // Visitor Management Routes (with permission middleware)
 Route::middleware(['auth'])->group(function () {
-    // API routes first (more specific)
+    // Specific static routes MUST come before dynamic routes
+    Route::get('/visitor/pending', [App\Http\Controllers\Visitor\VisitorController::class, 'pendingVisits'])->name('visitor.pending');
+    Route::get('/visitor/rejected', [App\Http\Controllers\Visitor\VisitorController::class, 'rejectedVisits'])->name('visitor.rejected');
+    Route::get('/visitor/approved', [App\Http\Controllers\Visitor\VisitorController::class, 'approvedVisits'])->name('visitor.approved');
+    Route::get('/visitor/history', [App\Http\Controllers\Visitor\VisitorController::class, 'visitHistory'])->name('visitor.history');
+    Route::get('/visitor/active', [App\Http\Controllers\Visitor\VisitorController::class, 'activeVisits'])->name('visitor.active');
+    Route::get('/visitor/checkin-checkout', [App\Http\Controllers\Visitor\VisitorController::class, 'checkinCheckout'])->name('visitor.checkin-checkout');
+
+    // API routes
     Route::get('/visitor/autofill', [App\Http\Controllers\Visitor\VisitorController::class, 'autofill'])->name('visitor.autofill');
     Route::get('/visitor/check-email', [App\Http\Controllers\Visitor\VisitorController::class, 'checkVisitorByEmail'])->name('visitor.check-email');
     Route::get('/visitor/check-phone', [App\Http\Controllers\Visitor\VisitorController::class, 'checkVisitorByPhone'])->name('visitor.check-phone');
     Route::get('/visitor/search-host', [App\Http\Controllers\Visitor\VisitorController::class, 'searchHost'])->name('visitor.search-host');
     Route::get('/visitor/statistics', [App\Http\Controllers\Visitor\VisitorController::class, 'statistics'])->name('visitor.statistics');
 
-    // CRUD routes second (less specific)
+    // CRUD routes (dynamic routes MUST come last)
     Route::get('/visitor', [App\Http\Controllers\Visitor\VisitorController::class, 'index'])->name('visitor.index');
     Route::get('/visitor/create', [App\Http\Controllers\Visitor\VisitorController::class, 'create'])->name('visitor.create');
     Route::post('/visitor', [App\Http\Controllers\Visitor\VisitorController::class, 'store'])->name('visitor.store');
@@ -259,6 +267,38 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/visitor/{id}/edit', [App\Http\Controllers\Visitor\VisitorController::class, 'edit'])->name('visitor.edit');
     Route::put('/visitor/{id}', [App\Http\Controllers\Visitor\VisitorController::class, 'update'])->name('visitor.update');
     Route::delete('/visitor/{id}', [App\Http\Controllers\Visitor\VisitorController::class, 'destroy'])->name('visitor.destroy');
+
+    // OTP Verification Routes
+    Route::middleware('permission:verify visit otp')->group(function () {
+        Route::get('/visitor/{id}/verify-otp', [App\Http\Controllers\Visitor\VisitorController::class, 'showVerifyOtp'])->name('visitor.verify.otp.view');
+        Route::post('/visitor/verify-otp/{id}', [App\Http\Controllers\Visitor\VisitorController::class, 'verifyOtp'])->name('visitor.verify.otp');
+    });
+
+    // Host Approval Routes
+    Route::middleware('permission:approve visit')->group(function () {
+        Route::post('/visits/{id}/approve', [App\Http\Controllers\Visitor\VisitorController::class, 'approveVisit'])->name('visit.approve');
+    });
+
+    Route::middleware('permission:reject visit')->group(function () {
+        Route::post('/visits/{id}/reject', [App\Http\Controllers\Visitor\VisitorController::class, 'rejectVisit'])->name('visit.reject');
+    });
+
+    // Check-in/Check-out Routes
+    Route::middleware('permission:checkin visit')->group(function () {
+        Route::post('/visits/{id}/check-in', [App\Http\Controllers\Visitor\VisitorController::class, 'checkIn'])->name('visit.checkin');
+    });
+
+    Route::middleware('permission:checkout visit')->group(function () {
+        Route::post('/visits/{id}/check-out', [App\Http\Controllers\Visitor\VisitorController::class, 'checkOut'])->name('visit.checkout');
+    });
+
+    // Live Dashboard Routes
+    Route::middleware('permission:view live dashboard')->group(function () {
+        Route::get('/visitors/live-dashboard', [App\Http\Controllers\Visitor\VisitorController::class, 'liveDashboard'])->name('visitor.live');
+    });
+
+    // API Routes (no authentication for public access if needed)
+    Route::get('/api/visitors/live', [App\Http\Controllers\Visitor\VisitorController::class, 'liveVisitorsApi'])->name('api.visitors.live');
 });
 
 // -------------------------------------------------------------------------
@@ -267,8 +307,7 @@ Route::get('/test-sms', function () {
     $smsService = new \App\Services\SmsNotificationService();
 
     $phone = '8801859385787'; // Test phone number (format: 880XXXXXXXXXX)
-    $message = 'Sharmin I Love YOu ...!';
-    // $message = 'This is a test SMS from VMS UCBL system. If you receive this, SMS is working!';
+    $message = 'This is a test SMS from VMS UCBL system. If you receive this, SMS is working!';
 
     try {
         $result = $smsService->send($phone, $message);

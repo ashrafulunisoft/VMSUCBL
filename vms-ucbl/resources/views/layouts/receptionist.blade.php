@@ -525,28 +525,74 @@
                             <i class="fas fa-chart-bar"></i> Statistics
                         </a>
                         @endcan
+
+                        @can('view live dashboard')
+                        <a href="{{ route('visitor.live') }}" class="submenu-item">
+                            <i class="fas fa-broadcast-tower"></i> Live Dashboard
+                        </a>
+                        @endcan
+
+                        @can('approve visit')
+                        <a href="{{ route('visitor.pending') }}" class="submenu-item">
+                            <i class="fas fa-check-double"></i> Pending Approvals
+                        </a>
+                        @endcan
+
+                        @can('approve visit')
+                        <a href="{{ route('visitor.rejected') }}" class="submenu-item">
+                            <i class="fas fa-times-circle"></i> Rejected Visits
+                        </a>
+                        @endcan
                     </div>
                 </div>
                 @endcan
 
-                <!-- Visit History - Permission Based -->
+                <!-- Visit Management - Permission Based -->
                 @can('view visitors')
-                <a href="#" class="sidebar-item">
-                    <i class="fas fa-history"></i> Visit History
-                </a>
-                @endcan
+                <div class="sidebar-dropdown">
+                    <a href="#" class="sidebar-item d-flex align-items-center" onclick="toggleSubmenu(event, 'visit-submenu')">
+                        <i class="fas fa-calendar-check"></i> Visit Management
+                        <i class="fas fa-chevron-down ms-auto small opacity-50"></i>
+                    </a>
+                    <div class="sidebar-submenu" id="visit-submenu">
+                        @can('view visitors')
+                        <a href="#" class="submenu-item">
+                            <i class="fas fa-history"></i> Visit History
+                        </a>
+                        @endcan
 
-                <!-- Active Visits - Permission Based -->
-                @can('edit visitors')
-                <a href="#" class="sidebar-item">
-                    <i class="fas fa-clock"></i> Active Visits
-                </a>
+                        @can('view visitors')
+                        <a href="#" class="submenu-item">
+                            <i class="fas fa-clock"></i> Active Visits
+                        </a>
+                        @endcan
+
+                        @can('edit visitors')
+                        <a href="#" class="submenu-item">
+                            <i class="fas fa-check-circle"></i> Approved Visits
+                        </a>
+                        @endcan
+
+                        @can('edit visitors')
+                        <a href="#" class="submenu-item">
+                            <i class="fas fa-user-check"></i> Check-in/Check-out
+                        </a>
+                        @endcan
+                    </div>
+                </div>
                 @endcan
 
                 <!-- Reports - Permission Based -->
                 @can('view visitors')
                 <a href="#" class="sidebar-item">
                     <i class="fas fa-chart-line"></i> Reports
+                </a>
+                @endcan
+
+                <!-- Settings - Permission Based -->
+                @can('manage settings')
+                <a href="#" class="sidebar-item">
+                    <i class="fas fa-cog"></i> Settings
                 </a>
                 @endcan
 
