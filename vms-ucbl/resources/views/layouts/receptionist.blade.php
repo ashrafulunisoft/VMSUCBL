@@ -575,6 +575,73 @@
                 right: -100%;
             }
         }
+
+        /* Pagination Styles - Fixed for Bootstrap 5 */
+        .pagination {
+            display: flex !important;
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0 0 0;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .page-item {
+            width: auto !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-link {
+            width: auto !important;
+            min-width: 40px;
+            height: 40px;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff !important;
+            text-decoration: none !important;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .page-link:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-blue));
+            border-color: transparent;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+            color: #fff !important;
+        }
+
+        .page-item.disabled .page-link {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.05);
+            color: #475569 !important;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        @media (max-width: 576px) {
+            .page-link {
+                min-width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+                padding: 0 10px;
+            }
+        }
     </style>
 </head>
 <body>

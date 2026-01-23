@@ -94,7 +94,7 @@
         <!-- Pagination -->
         @if($visits->hasPages())
         <div class="d-flex justify-content-center mt-4">
-            {{ $visits->appends(request()->query())->links() }}
+            {{ $visits->appends(request()->query())->links('pagination::bootstrap-5') }}
         </div>
         @endif
     </div>
