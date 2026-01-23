@@ -496,7 +496,7 @@
 
             <nav>
                 <!-- Dashboard - Always visible -->
-                <a href="{{ route('receptionist.dashboard') }}" class="sidebar-item {{ request()->routeIs('receptionist.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}" class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
 
@@ -551,7 +551,7 @@
                 @endcan
 
                 <!-- Profile - Always visible -->
-                <a href="{{ route('profile') }}" class="sidebar-item">
+                <a href="{{ route('profile') }}" class="sidebar-item {{ request()->routeIs('profile') ? 'active' : '' }}">
                     <i class="fas fa-user"></i> My Profile
                 </a>
 
@@ -559,6 +559,15 @@
                 <a href="#" class="sidebar-item">
                     <i class="fas fa-cog"></i> Settings
                 </a>
+
+                <!-- Logout - Always visible -->
+                <a href="{{ route('logout') }}" class="sidebar-item text-danger" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
             </nav>
 
             <div class="help-center-box">

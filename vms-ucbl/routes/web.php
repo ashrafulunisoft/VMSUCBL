@@ -60,32 +60,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/visitor/{id}/delete', [AdminController::class, 'deleteVisitor'])->name('admin.visitor.delete');
 });
 
-Route::middleware(['auth', 'role:receptionist'])->group(function () {
-    Route::get('/receptionist/dashboard', [App\Http\Controllers\Receptionist\ReceptionistController::class, 'dashboard'])
-        ->name('receptionist.dashboard');
-});
-
-Route::middleware(['auth', 'role:visitor'])->group(function () {
-    //  dd("This is the dashboard page for visitor");
-    Route::get('/visitor/dashboard', function () {
-        return "This is the dashboard page for visitor";
-    })->name('visitor.dashboard');
-    // Route::get('/visitor/dashboard', fn () => view('visitor.dashboard'))
-    //     ->name('visitor.dashboard');
-});
-
 /*
 |--------------------------------------------------------------------------
-| Fallback (any other role → staff)
+| Role-wise Dashboards (Receptionist, Staff, Visitor all use same controller)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->group(function () {
-    //  dd("This is the dashboard page for staff");
-    Route::get('/staff/dashboard', function () {
-        return "This is the dashboard page for staff";
-    })->name('staff.dashboard');
-    // Route::get('/staff/dashboard', fn () => view('staff.dashboard'))
-    //     ->name('staff.dashboard');
+Route::middleware(['auth', 'role:receptionist|staff|visitor'])->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Visitor\VisitorController::class, 'dashboard'])
+        ->name('dashboard');
 });
 
 

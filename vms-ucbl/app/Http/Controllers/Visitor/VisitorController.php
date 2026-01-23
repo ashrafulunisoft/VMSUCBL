@@ -17,13 +17,76 @@ use Illuminate\Support\Facades\DB;
 class VisitorController extends Controller
 {
     /**
+     * Display the dashboard for receptionist, staff, and visitor roles
+     */
+    public function dashboard()
+    {
+        // Get visitor statistics based on user permissions
+        $stats = [
+            'total_visitors' => Visitor::count(),
+            'total_visits' => Visit::count(),
+            'pending_visits' => Visit::where('status', 'pending')->count(),
+            'approved_visits' => Visit::where('status', 'approved')->count(),
+            'completed_visits' => Visit::where('status', 'completed')->count(),
+            'cancelled_visits' => Visit::where('status', 'cancelled')->count(),
+            'visits_today' => Visit::whereDate('schedule_time', today())->count(),
+            'active_visits' => Visit::where('status', 'approved')
+                ->whereDate('schedule_time', today())
+                ->count(),
+        ];
+
+        // Get recent visits based on permissions
+        $recentVisitsQuery = Visit::with(['visitor', 'type', 'meetingUser']);
+
+        // If user doesn't have view visitors permission, show only their own visits
+        if (!auth()->user()->can('view visitors')) {
+            $recentVisitsQuery->where('meeting_user_id', auth()->id());
+        }
+
+        $recentVisits = $recentVisitsQuery->orderBy('created_at', 'desc')->limit(10)->get();
+
+        // Get today's visits based on permissions
+        $todayVisitsQuery = Visit::with(['visitor', 'type', 'meetingUser'])
+            ->whereDate('schedule_time', today());
+
+        if (!auth()->user()->can('view visitors')) {
+            $todayVisitsQuery->where('meeting_user_id', auth()->id());
+        }
+
+        $todayVisits = $todayVisitsQuery->orderBy('schedule_time', 'asc')->get();
+
+        // Get pending visits based on permissions
+        $pendingVisitsQuery = Visit::with(['visitor', 'type', 'meetingUser'])
+            ->where('status', 'pending');
+
+        if (!auth()->user()->can('edit visitors')) {
+            $pendingVisitsQuery->where('meeting_user_id', auth()->id());
+        }
+
+        $pendingVisits = $pendingVisitsQuery->orderBy('created_at', 'desc')->limit(5)->get();
+
+        return view('vms.backend.visitor.dashboard', compact(
+            'stats',
+            'recentVisits',
+            'todayVisits',
+            'pendingVisits'
+        ));
+    }
+
+    /**
      * Display a listing of visitors
      */
     public function index()
     {
-        $visits = Visit::with(['visitor', 'type', 'meetingUser'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $visitsQuery = Visit::with(['visitor', 'type', 'meetingUser'])
+            ->orderBy('created_at', 'desc');
+
+        // If user doesn't have view visitors permission, show only their own visits
+        if (!auth()->user()->can('view visitors')) {
+            $visitsQuery->where('meeting_user_id', auth()->id());
+        }
+
+        $visits = $visitsQuery->paginate(10);
 
         return view('vms.backend.visitor.index', compact('visits'));
     }

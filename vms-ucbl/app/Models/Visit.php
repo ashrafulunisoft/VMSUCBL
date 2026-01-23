@@ -39,4 +39,9 @@ class Visit extends Model
         return $this->belongsTo(VisitType::class, 'visit_type_id');
     }
 
+    public function rfid()
+    {
+        return $this->hasOne(Rfid::class);
+    }
+
 }
