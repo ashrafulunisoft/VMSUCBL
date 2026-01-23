@@ -43,95 +43,158 @@ class VisitorController extends Controller
      * Store a newly created visitor
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:visitors,email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'company' => 'nullable|string|max:255',
-            'host_name' => 'required|string|max:255',
-            'purpose' => 'required|string|max:500',
-            'visit_date' => 'required|date|after_or_equal:today',
-            'visit_type_id' => 'required|exists:visit_types,id',
-            'face_image' => 'nullable|string',
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|max:255',
+        'phone' => 'nullable|string|max:20',
+        'company' => 'nullable|string|max:255',
+        'host_name' => 'required|string|max:255',
+        'purpose' => 'required|string|max:500',
+        'visit_date' => 'required|date|after_or_equal:today',
+        'visit_type_id' => 'required|exists:visit_types,id',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        // 🔎 1. Check visitor
+        $visitor = Visitor::where('email', $request->email)->first();
+
+        // ➕ 2. Create visitor ONLY if not exists
+        if (!$visitor) {
+            $visitor = Visitor::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->company,
+                'is_blocked' => false,
+            ]);
+        }
+
+        // 👤 3. Find host
+        $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first()
+                    ?? Auth::user();
+
+        // 📝 4. Create visit
+        $visit = Visit::create([
+            'visitor_id' => $visitor->id,
+            'meeting_user_id' => $hostUser->id,
+            'visit_type_id' => $request->visit_type_id,
+            'purpose' => $request->purpose,
+            'schedule_time' => $request->visit_date,
+            'status' => 'pending',
         ]);
 
-        try {
-            // Create or find visitor
-            $visitor = Visitor::firstOrCreate(
-                ['email' => $request->email],
-                [
-                    'name' => $request->name,
-                    'phone' => $request->phone,
-                    'address' => $request->company,
-                    'is_blocked' => false,
-                ]
-            );
+        DB::commit();
 
-            // Find host user
-            $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
+        return redirect()
+            ->route('visitor.index')
+            ->with('success', 'Visitor & visit registered successfully!');
 
-            if (is_null($hostUser)) {
-                $hostUser = Auth::user();
-                Log::warning('Host not found, using current user as default host', [
-                    'requested_host' => $request->host_name,
-                    'default_host' => $hostUser->name,
-                ]);
-            }
+    } catch (\Exception $e) {
+        DB::rollBack();
 
-            // Create visit record
-            $visit = Visit::create([
-                'visitor_id' => $visitor->id,
-                'meeting_user_id' => $hostUser->id,
-                'visit_type_id' => $request->visit_type_id,
-                'purpose' => $request->purpose,
-                'schedule_time' => $request->visit_date,
-                'status' => 'pending', // Default to pending for non-admin
-            ]);
+        Log::error('Visitor registration failed', [
+            'error' => $e->getMessage(),
+        ]);
 
-            // Send email notification
-            $emailData = [
-                'visitor_name' => $visitor->name,
-                'visitor_email' => $visitor->email,
-                'visitor_phone' => $visitor->phone,
-                'visitor_company' => $visitor->address,
-                'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
-                'visit_type' => $visit->type->name ?? 'N/A',
-                'purpose' => $visit->purpose,
-                'host_name' => $hostUser->name,
-                'status' => $visit->status,
-            ];
-
-            $emailService = new EmailNotificationService();
-            $emailService->sendVisitorRegistrationEmail($emailData);
-
-            // Send SMS notification if phone number exists
-            if (!empty($visitor->phone)) {
-                $smsMessage = "Dear {$visitor->name}, Your visit to UCB Bank has been registered for " .
-                              \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A') .
-                              ". Host: {$hostUser->name}. Status: {$visit->status}. Thank you!";
-
-                $phone = preg_replace('/[^0-9]/', '', $visitor->phone);
-                if (strpos($phone, '880') !== 0) {
-                    $phone = '88' . $phone;
-                }
-
-                $smsService = new SmsNotificationService();
-                $smsService->send($phone, $smsMessage);
-            }
-
-            return redirect()->route('visitor.index')
-                ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!');
-
-        } catch (\Exception $e) {
-            Log::error('Error during visitor registration', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return back()->with('error', 'Failed to register visitor: ' . $e->getMessage());
-        }
+        return back()
+            ->withErrors(['error' => 'Something went wrong'])
+            ->withInput();
     }
+}
+
+    // public function store(Request $request)
+    // {
+    //     $request->validate([
+    //         'name' => 'required|string|max:255',
+    //         'email' => 'required|email|unique:visitors,email|max:255',
+    //         'phone' => 'nullable|string|max:20',
+    //         'company' => 'nullable|string|max:255',
+    //         'host_name' => 'required|string|max:255',
+    //         'purpose' => 'required|string|max:500',
+    //         'visit_date' => 'required|date|after_or_equal:today',
+    //         'visit_type_id' => 'required|exists:visit_types,id',
+    //         'face_image' => 'nullable|string',
+    //     ]);
+
+    //     try {
+    //         // Create or find visitor
+    //         $visitor = Visitor::firstOrCreate(
+    //             ['email' => $request->email],
+    //             [
+    //                 'name' => $request->name,
+    //                 'phone' => $request->phone,
+    //                 'address' => $request->company,
+    //                 'is_blocked' => false,
+    //             ]
+    //         );
+
+    //         // Find host user
+    //         $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
+
+    //         if (is_null($hostUser)) {
+    //             $hostUser = Auth::user();
+    //             Log::warning('Host not found, using current user as default host', [
+    //                 'requested_host' => $request->host_name,
+    //                 'default_host' => $hostUser->name,
+    //             ]);
+    //         }
+
+    //         // Create visit record
+    //         $visit = Visit::create([
+    //             'visitor_id' => $visitor->id,
+    //             'meeting_user_id' => $hostUser->id,
+    //             'visit_type_id' => $request->visit_type_id,
+    //             'purpose' => $request->purpose,
+    //             'schedule_time' => $request->visit_date,
+    //             'status' => 'pending', // Default to pending for non-admin
+    //         ]);
+
+    //         // Send email notification
+    //         $emailData = [
+    //             'visitor_name' => $visitor->name,
+    //             'visitor_email' => $visitor->email,
+    //             'visitor_phone' => $visitor->phone,
+    //             'visitor_company' => $visitor->address,
+    //             'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+    //             'visit_type' => $visit->type->name ?? 'N/A',
+    //             'purpose' => $visit->purpose,
+    //             'host_name' => $hostUser->name,
+    //             'status' => $visit->status,
+    //         ];
+
+    //         $emailService = new EmailNotificationService();
+    //         $emailService->sendVisitorRegistrationEmail($emailData);
+
+    //         // Send SMS notification if phone number exists
+    //         if (!empty($visitor->phone)) {
+    //             $smsMessage = "Dear {$visitor->name}, Your visit to UCB Bank has been registered for " .
+    //                           \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A') .
+    //                           ". Host: {$hostUser->name}. Status: {$visit->status}. Thank you!";
+
+    //             $phone = preg_replace('/[^0-9]/', '', $visitor->phone);
+    //             if (strpos($phone, '880') !== 0) {
+    //                 $phone = '88' . $phone;
+    //             }
+
+    //             $smsService = new SmsNotificationService();
+    //             $smsService->send($phone, $smsMessage);
+    //         }
+
+    //         return redirect()->route('visitor.index')
+    //             ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!');
+
+    //     } catch (\Exception $e) {
+    //         Log::error('Error during visitor registration', [
+    //             'error' => $e->getMessage(),
+    //             'trace' => $e->getTraceAsString(),
+    //         ]);
+
+    //         return back()->with('error', 'Failed to register visitor: ' . $e->getMessage());
+    //     }
+    // }
 
     /**
      * Display the specified visitor
