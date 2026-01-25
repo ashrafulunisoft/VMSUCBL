@@ -24,6 +24,33 @@ class AdminController extends Controller
         return view('vms.backend.admin.admin_dashboard');
     }
 
+    /**
+     * Admin live dashboard view
+     */
+    public function liveDashboard()
+    {
+        // Get all active visits for initial load
+        $visits = Visit::with(['visitor', 'meetingUser', 'type'])
+            ->whereIn('status', ['pending_host', 'approved', 'checked_in'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('vms.backend.admin.live-dashboard', compact('visits'));
+    }
+
+    /**
+     * API endpoint for admin live dashboard data
+     */
+    public function liveVisitsApi()
+    {
+        $visits = Visit::with(['visitor', 'meetingUser', 'type'])
+            ->whereIn('status', ['pending_host', 'approved', 'checked_in'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($visits);
+    }
+
     public function createRole(){
         return view('vms.backend.admin.Addrole');
     }

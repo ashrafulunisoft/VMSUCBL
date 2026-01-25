@@ -44,6 +44,8 @@ Route::get('/dashboard', function () {
 */
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/live-dashboard', [AdminController::class, 'liveDashboard'])->name('admin.live.dashboard');
+    Route::get('/api/admin/visitors/live', [AdminController::class, 'liveVisitsApi'])->name('api.admin.visitors.live');
     Route::get('/admin/role/create', [AdminController::class, 'createRole'])->name('admin.role.create');
     Route::post('/admin/role/store', [AdminController::class, 'storeRole'])->name('admin.role.store');
     Route::get('/admin/role/assign/create', [AdminController::class, 'createAssignRole'])->name('admin.role.assign.create');
