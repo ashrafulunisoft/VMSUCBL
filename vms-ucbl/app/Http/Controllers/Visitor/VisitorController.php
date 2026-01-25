@@ -1185,4 +1185,31 @@ class VisitorController extends Controller
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
     }
+
+    /**
+     * Public live dashboard view (no authentication required)
+     */
+    public function liveDashboardPublic()
+    {
+        // Get all active visits for initial load
+        $visits = Visit::with(['visitor', 'meetingUser', 'type'])
+            ->whereIn('status', ['pending_host', 'approved', 'checked_in'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('vms.backend.visitor.live-dashboard-public', compact('visits'));
+    }
+
+    /**
+     * Public API endpoint for live dashboard data (no authentication required)
+     */
+    public function liveVisitorsApiPublic()
+    {
+        $visits = Visit::with(['visitor', 'meetingUser', 'type'])
+            ->whereIn('status', ['pending_host', 'approved', 'checked_in'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($visits);
+    }
 }

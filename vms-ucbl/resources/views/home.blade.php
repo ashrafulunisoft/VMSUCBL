@@ -314,15 +314,15 @@
 
             <!-- Role Cards -->
             <div class="row g-4">
-                <!-- Admin Card -->
+                <!-- Registration Card -->
                 <div class="col-lg-4 col-md-6">
-                    <a href="{{ route('login') }}" class="role-card">
+                    <a href="{{ route('register') }}" class="role-card">
                         <div class="role-icon admin">
-                            <i class="fas fa-user-shield"></i>
+                            <i class="fas fa-user-plus"></i>
                         </div>
-                        <h3 class="role-title">Admin</h3>
+                        <h3 class="role-title">Registration</h3>
                         <p class="role-description">
-                            Full system control, user management, and administrative features
+                            Create a new account to access visitor management system
                         </p>
                         <div class="role-arrow">
                             <i class="fas fa-arrow-right"></i>
@@ -330,15 +330,15 @@
                     </a>
                 </div>
 
-                <!-- Reception Card -->
+                <!-- Login Card -->
                 <div class="col-lg-4 col-md-6">
                     <a href="{{ route('login') }}" class="role-card">
                         <div class="role-icon reception">
-                            <i class="fas fa-headset"></i>
+                            <i class="fas fa-sign-in-alt"></i>
                         </div>
-                        <h3 class="role-title">Reception</h3>
+                        <h3 class="role-title">Login</h3>
                         <p class="role-description">
-                            Manage visitor check-ins, approvals, and front desk operations
+                            Sign in to your existing account to manage visitors
                         </p>
                         <div class="role-arrow">
                             <i class="fas fa-arrow-right"></i>
@@ -346,15 +346,15 @@
                     </a>
                 </div>
 
-                <!-- Visitor Card -->
+                <!-- Live Dashboard Card -->
                 <div class="col-lg-4 col-md-6">
-                    <a href="{{ route('login') }}" class="role-card">
+                    <a href="{{ route('visitor.live.public') }}" class="role-card">
                         <div class="role-icon visitor">
-                            <i class="fas fa-user"></i>
+                            <i class="fas fa-tachometer-alt"></i>
                         </div>
-                        <h3 class="role-title">Visitor</h3>
+                        <h3 class="role-title">Live Dashboard</h3>
                         <p class="role-description">
-                            Register visits, check status, and manage your appointments
+                            View real-time visitor status and live updates
                         </p>
                         <div class="role-arrow">
                             <i class="fas fa-arrow-right"></i>
