@@ -953,17 +953,36 @@
                             'Content-Type': 'application/json',
                         }
                     })
-                    .then(response => response.json())
+                    .then(async response => {
+                        // Get response text first to check what we got
+                        const responseText = await response.text();
+                        console.log('Response status:', response.status);
+                        console.log('Response text:', responseText);
+
+                        // Check if response is OK
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        // Try to parse as JSON
+                        try {
+                            return JSON.parse(responseText);
+                        } catch (e) {
+                            console.error('Failed to parse response as JSON:', e);
+                            throw new Error('Server returned invalid response. Check browser console for details.');
+                        }
+                    })
                     .then(data => {
                         if (data.success) {
                             Swal.fire('Approved!', data.message, 'success');
                             loadNotifications();
                         } else {
-                            Swal.fire('Error!', data.message, 'error');
+                            Swal.fire('Error!', data.message || 'Unknown error occurred', 'error');
                         }
                     })
                     .catch(error => {
-                        Swal.fire('Error!', 'Failed to approve visit', 'error');
+                        console.error('Approve error:', error);
+                        Swal.fire('Error!', 'Failed to approve visit: ' + error.message, 'error');
                     });
                 }
             });
@@ -1001,17 +1020,36 @@
                             reason: result.value
                         })
                     })
-                    .then(response => response.json())
+                    .then(async response => {
+                        // Get response text first to check what we got
+                        const responseText = await response.text();
+                        console.log('Response status:', response.status);
+                        console.log('Response text:', responseText);
+
+                        // Check if response is OK
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        // Try to parse as JSON
+                        try {
+                            return JSON.parse(responseText);
+                        } catch (e) {
+                            console.error('Failed to parse response as JSON:', e);
+                            throw new Error('Server returned invalid response. Check browser console for details.');
+                        }
+                    })
                     .then(data => {
                         if (data.success) {
                             Swal.fire('Rejected!', data.message, 'success');
                             loadNotifications();
                         } else {
-                            Swal.fire('Error!', data.message, 'error');
+                            Swal.fire('Error!', data.message || 'Unknown error occurred', 'error');
                         }
                     })
                     .catch(error => {
-                        Swal.fire('Error!', 'Failed to reject visit', 'error');
+                        console.error('Reject error:', error);
+                        Swal.fire('Error!', 'Failed to reject visit: ' + error.message, 'error');
                     });
                 }
             });

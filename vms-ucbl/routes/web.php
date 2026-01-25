@@ -275,13 +275,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Host Approval Routes
-    Route::middleware('permission:approve visit')->group(function () {
-        Route::post('/visits/{id}/approve', [App\Http\Controllers\Visitor\VisitorController::class, 'approveVisit'])->name('visit.approve');
-    });
+    Route::post('/visits/{id}/approve', [App\Http\Controllers\Visitor\VisitorController::class, 'approveVisit'])
+        ->name('visit.approve')
+        ->middleware(['auth', 'permission:approve visit']);
 
-    Route::middleware('permission:reject visit')->group(function () {
-        Route::post('/visits/{id}/reject', [App\Http\Controllers\Visitor\VisitorController::class, 'rejectVisit'])->name('visit.reject');
-    });
+    Route::post('/visits/{id}/reject', [App\Http\Controllers\Visitor\VisitorController::class, 'rejectVisit'])
+        ->name('visit.reject')
+        ->middleware(['auth', 'permission:reject visit']);
 
     // Check-in/Check-out Routes
     Route::middleware('permission:checkin visit')->group(function () {

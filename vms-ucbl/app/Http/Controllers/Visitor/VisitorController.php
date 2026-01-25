@@ -685,16 +685,12 @@ class VisitorController extends Controller
                 ]);
             }
 
-            // Return JSON response for AJAX calls
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Visit approved successfully. RFID: ' . $rfid,
-                    'rfid' => $rfid
-                ]);
-            }
-
-            return back()->with('success', 'Visit approved successfully. RFID: ' . $rfid);
+            // Always return JSON for this endpoint with explicit content type
+            return response()->json([
+                'success' => true,
+                'message' => 'Visit approved successfully. RFID: ' . $rfid,
+                'rfid' => $rfid
+            ])->header('Content-Type', 'application/json');
         } catch (\Exception $e) {
             Log::error('Error approving visit', [
                 'error' => $e->getMessage(),
@@ -702,14 +698,11 @@ class VisitorController extends Controller
                 'visit_id' => $id,
             ]);
 
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to approve visit: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return back()->with('error', 'Failed to approve visit: ' . $e->getMessage());
+            // Always return JSON error with explicit content type
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to approve visit: ' . $e->getMessage()
+            ], 500)->header('Content-Type', 'application/json');
         }
     }
 
@@ -719,7 +712,8 @@ class VisitorController extends Controller
     public function rejectVisit(Request $request, $id)
     {
         try {
-            $request->validate([
+            // Validate input
+            $validated = $request->validate([
                 'reason' => 'required|string|max:500',
             ]);
 
@@ -727,7 +721,7 @@ class VisitorController extends Controller
 
             $visit->update([
                 'status' => 'rejected',
-                'rejected_reason' => $request->reason,
+                'rejected_reason' => $validated['reason'],
             ]);
 
             // Dispatch event for real-time updates
@@ -737,7 +731,7 @@ class VisitorController extends Controller
             $emailData = [
                 'visitor_name' => $visit->visitor->name,
                 'visitor_email' => $visit->visitor->email,
-                'reason' => $request->reason,
+                'reason' => $validated['reason'],
                 'host_name' => $visit->meetingUser->name,
             ];
 
@@ -750,15 +744,17 @@ class VisitorController extends Controller
                 ]);
             }
 
-            // Return JSON response for AJAX calls
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Visit rejected successfully.'
-                ]);
-            }
-
-            return back()->with('success', 'Visit rejected successfully.');
+            // Always return JSON for this endpoint with explicit content type
+            return response()->json([
+                'success' => true,
+                'message' => 'Visit rejected successfully.'
+            ])->header('Content-Type', 'application/json');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Return validation errors as JSON with explicit content type
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error: ' . implode(', ', $e->errors())
+            ], 422)->header('Content-Type', 'application/json');
         } catch (\Exception $e) {
             Log::error('Error rejecting visit', [
                 'error' => $e->getMessage(),
@@ -766,14 +762,11 @@ class VisitorController extends Controller
                 'visit_id' => $id,
             ]);
 
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to reject visit: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return back()->with('error', 'Failed to reject visit: ' . $e->getMessage());
+            // Always return JSON error with explicit content type
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reject visit: ' . $e->getMessage()
+            ], 500)->header('Content-Type', 'application/json');
         }
     }
 
