@@ -167,6 +167,13 @@ Route::middleware('guest')->group(function () {
 
 });
 
+// Public Live Dashboard Routes (No authentication required)
+Route::get('/public/live-dashboard', [App\Http\Controllers\Visitor\VisitorController::class, 'liveDashboardPublic'])
+    ->name('visitor.live.public');
+
+Route::get('/api/visitors/live-public', [App\Http\Controllers\Visitor\VisitorController::class, 'liveVisitorsApiPublic'])
+    ->name('api.visitors.live.public');
+
 
 
 /*
