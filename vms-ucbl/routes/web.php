@@ -265,7 +265,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/visitor/check-email', [App\Http\Controllers\Visitor\VisitorController::class, 'checkVisitorByEmail'])->name('visitor.check-email');
     Route::get('/visitor/check-phone', [App\Http\Controllers\Visitor\VisitorController::class, 'checkVisitorByPhone'])->name('visitor.check-phone');
     Route::get('/visitor/search-host', [App\Http\Controllers\Visitor\VisitorController::class, 'searchHost'])->name('visitor.search-host');
+    Route::get('/visitor/search-phone', [App\Http\Controllers\Visitor\VisitorController::class, 'searchVisitorByPhone'])->name('visitor.search-phone');
     Route::get('/visitor/statistics', [App\Http\Controllers\Visitor\VisitorController::class, 'statistics'])->name('visitor.statistics');
+    Route::get('/visitor/report', [App\Http\Controllers\Visitor\VisitorController::class, 'report'])->name('visitor.report');
+    Route::get('/visitor/report/export-csv', [App\Http\Controllers\Visitor\VisitorController::class, 'exportReportCsv'])->name('visitor.report.export-csv');
 
     // CRUD routes (dynamic routes MUST come last)
     Route::get('/visitor', [App\Http\Controllers\Visitor\VisitorController::class, 'index'])->name('visitor.index');
