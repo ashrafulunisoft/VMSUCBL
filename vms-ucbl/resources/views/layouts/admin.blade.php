@@ -537,7 +537,7 @@
                 <a href="#" class="sidebar-item"><i class="fas fa-history"></i> View History</a>
                 <a href="#" class="sidebar-item"><i class="fas fa-user-plus"></i> Add New User</a>
                 <a href="#" class="sidebar-item"><i class="fas fa-list"></i> Visitor's Log</a>
-                <a href="#" class="sidebar-item"><i class="fas fa-user"></i> My Profile</a>
+                <a href="{{ route('admin.profile') }}" class="sidebar-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}"><i class="fas fa-user"></i> My Profile</a>
                 <a href="#" class="sidebar-item"><i class="fas fa-users"></i> All Users</a>
 
                 <div class="sidebar-dropdown">

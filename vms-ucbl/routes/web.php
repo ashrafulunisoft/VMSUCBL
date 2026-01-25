@@ -43,23 +43,65 @@ Route::get('/dashboard', function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])->group(function () {
+    // Admin Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+    // Admin Profile
+    Route::get('/admin/profile', [AdminController::class, 'profile'])->name('admin.profile');
+
+    // Admin Live Dashboard
     Route::get('/admin/live-dashboard', [AdminController::class, 'liveDashboard'])->name('admin.live.dashboard');
     Route::get('/api/admin/visitors/live', [AdminController::class, 'liveVisitsApi'])->name('api.admin.visitors.live');
+
+    // Admin Visitor Management Routes
+    // Static routes MUST come before dynamic routes
+    Route::get('/admin/visitor/pending', [AdminController::class, 'pendingVisits'])->name('admin.visitor.pending');
+    Route::get('/admin/visitor/rejected', [AdminController::class, 'rejectedVisits'])->name('admin.visitor.rejected');
+    Route::get('/admin/visitor/approved', [AdminController::class, 'approvedVisits'])->name('admin.visitor.approved');
+    Route::get('/admin/visitor/history', [AdminController::class, 'visitHistory'])->name('admin.visitor.history');
+    Route::get('/admin/visitor/active', [AdminController::class, 'activeVisits'])->name('admin.visitor.active');
+    Route::get('/admin/visitor/checkin-checkout', [AdminController::class, 'checkinCheckout'])->name('admin.visitor.checkin-checkout');
+
+    // API routes for admin
+    Route::get('/admin/visitor/autofill', [AdminController::class, 'autofill'])->name('admin.visitor.autofill');
+    Route::get('/admin/visitor/check-email', [AdminController::class, 'checkVisitorByEmail'])->name('admin.visitor.check-email');
+    Route::get('/admin/visitor/check-email', [AdminController::class, 'checkVisitorByEmail'])->name('admin.visitor.registration.check-visitor');
+    Route::get('/admin/visitor/check-phone', [AdminController::class, 'checkVisitorByPhone'])->name('admin.visitor.check-phone');
+    Route::get('/admin/visitor/check-phone', [AdminController::class, 'checkVisitorByPhone'])->name('admin.visitor.registration.check-visitor-phone');
+    Route::get('/admin/visitor/search-host', [AdminController::class, 'searchHost'])->name('admin.visitor.search-host');
+    Route::get('/admin/visitor/search-host', [AdminController::class, 'searchHost'])->name('admin.visitor.registration.search-host');
+    Route::get('/admin/visitor/statistics', [AdminController::class, 'statistics'])->name('admin.visitor.statistics');
+
+    // CRUD routes (dynamic routes MUST come last)
+    Route::get('/admin/visitor', [AdminController::class, 'visitorList'])->name('admin.visitor.index');
+    Route::get('/admin/visitor', [AdminController::class, 'visitorList'])->name('admin.visitor.list');
+    Route::get('/admin/visitor/create', [AdminController::class, 'createVisitorRegistration'])->name('admin.visitor.create');
+    Route::get('/admin/visitor/create', [AdminController::class, 'createVisitorRegistration'])->name('admin.visitor.registration.create');
+    Route::post('/admin/visitor', [AdminController::class, 'storeVisitorRegistration'])->name('admin.visitor.store');
+    Route::post('/admin/visitor', [AdminController::class, 'storeVisitorRegistration'])->name('admin.visitor.registration.store');
+    Route::get('/admin/visitor/{id}', [AdminController::class, 'showVisitor'])->name('admin.visitor.show');
+    Route::get('/admin/visitor/{id}/edit', [AdminController::class, 'editVisitor'])->name('admin.visitor.edit');
+    Route::post('/admin/visitor/{id}/update', [AdminController::class, 'updateVisitor'])->name('admin.visitor.update');
+    Route::delete('/admin/visitor/{id}', [AdminController::class, 'deleteVisitor'])->name('admin.visitor.destroy');
+
+    // OTP Verification Routes
+    Route::get('/admin/visitor/{id}/verify-otp', [AdminController::class, 'showVerifyOtp'])->name('admin.visitor.verify.otp.view');
+    Route::post('/admin/visitor/verify-otp/{id}', [AdminController::class, 'verifyOtp'])->name('admin.visitor.verify.otp');
+
+    // Host Approval Routes
+    Route::post('/admin/visits/{id}/approve', [AdminController::class, 'approveVisit'])->name('admin.visit.approve');
+    Route::post('/admin/visits/{id}/reject', [AdminController::class, 'rejectVisit'])->name('admin.visit.reject');
+
+    // Check-in/Check-out Routes
+    Route::post('/admin/visits/{id}/check-in', [AdminController::class, 'checkIn'])->name('admin.visit.checkin');
+    Route::post('/admin/visits/{id}/check-out', [AdminController::class, 'checkOut'])->name('admin.visit.checkout');
+
+    // Admin Role Management Routes
     Route::get('/admin/role/create', [AdminController::class, 'createRole'])->name('admin.role.create');
     Route::post('/admin/role/store', [AdminController::class, 'storeRole'])->name('admin.role.store');
     Route::get('/admin/role/assign/create', [AdminController::class, 'createAssignRole'])->name('admin.role.assign.create');
     Route::post('/admin/role/assign/store', [AdminController::class, 'storeAssignRole'])->name('admin.role.assign.store');
     Route::post('/admin/role/assign/remove', [AdminController::class, 'removeUserRole'])->name('admin.role.assign.remove');
-    Route::get('/admin/visitor/registration/create', [AdminController::class, 'createVisitorRegistration'])->name('admin.visitor.registration.create');
-    Route::post('/admin/visitor/registration/store', [AdminController::class, 'storeVisitorRegistration'])->name('admin.visitor.registration.store');
-    Route::get('/admin/visitor/registration/search-host', [AdminController::class, 'searchHost'])->name('admin.visitor.registration.search-host');
-    Route::get('/admin/visitor/registration/check-visitor', [AdminController::class, 'checkVisitor'])->name('admin.visitor.registration.check-visitor');
-    Route::get('/admin/visitor/registration/check-visitor-phone', [AdminController::class, 'checkVisitorByPhone'])->name('admin.visitor.registration.check-visitor-phone');
-    Route::get('/admin/visitor/list', [AdminController::class, 'visitorList'])->name('admin.visitor.list');
-    Route::get('/admin/visitor/{id}/edit', [AdminController::class, 'editVisitor'])->name('admin.visitor.edit');
-    Route::post('/admin/visitor/{id}/update', [AdminController::class, 'updateVisitor'])->name('admin.visitor.update');
-    Route::delete('/admin/visitor/{id}/delete', [AdminController::class, 'deleteVisitor'])->name('admin.visitor.delete');
 });
 
 /*
