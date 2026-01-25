@@ -652,39 +652,58 @@ class VisitorController extends Controller
      */
     public function approveVisit($id)
     {
-        $visit = Visit::with(['visitor', 'meetingUser'])->findOrFail($id);
-
-        // Generate RFID
-        $rfid = 'RFID-' . strtoupper(Str::random(8));
-
-        $visit->update([
-            'status' => 'approved',
-            'rfid' => $rfid,
-            'approved_at' => now(),
-        ]);
-
-        // Dispatch event for real-time updates
-        broadcast(new VisitApproved($visit));
-
-        // Send email notification to visitor
-        $emailData = [
-            'visitor_name' => $visit->visitor->name,
-            'visitor_email' => $visit->visitor->email,
-            'rfid' => $rfid,
-            'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
-            'host_name' => $visit->meetingUser->name,
-        ];
-
         try {
-            Mail::to($visit->visitor->email)->send(new \App\Mail\VisitApprovedEmail($emailData));
-        } catch (\Exception $e) {
-            Log::error('Failed to send approval email', [
-                'error' => $e->getMessage(),
-                'visit_id' => $visit->id,
-            ]);
-        }
+            $visit = Visit::with(['visitor', 'meetingUser'])->findOrFail($id);
 
-        return back()->with('success', 'Visit approved successfully. RFID: ' . $rfid);
+            // Generate RFID
+            $rfid = 'RFID-' . strtoupper(Str::random(8));
+
+            $visit->update([
+                'status' => 'approved',
+                'rfid' => $rfid,
+                'approved_at' => now(),
+            ]);
+
+            // Dispatch event for real-time updates
+            broadcast(new VisitApproved($visit));
+
+            // Send email notification to visitor
+            $emailData = [
+                'visitor_name' => $visit->visitor->name,
+                'visitor_email' => $visit->visitor->email,
+                'rfid' => $rfid,
+                'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+                'host_name' => $visit->meetingUser->name,
+            ];
+
+            try {
+                Mail::to($visit->visitor->email)->send(new \App\Mail\VisitApprovedEmail($emailData));
+            } catch (\Exception $e) {
+                Log::error('Failed to send approval email', [
+                    'error' => $e->getMessage(),
+                    'visit_id' => $visit->id,
+                ]);
+            }
+
+            // Always return JSON for this endpoint with explicit content type
+            return response()->json([
+                'success' => true,
+                'message' => 'Visit approved successfully. RFID: ' . $rfid,
+                'rfid' => $rfid
+            ])->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            Log::error('Error approving visit', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'visit_id' => $id,
+            ]);
+
+            // Always return JSON error with explicit content type
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to approve visit: ' . $e->getMessage()
+            ], 500)->header('Content-Type', 'application/json');
+        }
     }
 
     /**
@@ -692,38 +711,63 @@ class VisitorController extends Controller
      */
     public function rejectVisit(Request $request, $id)
     {
-        $request->validate([
-            'reason' => 'required|string|max:500',
-        ]);
-
-        $visit = Visit::with(['visitor', 'meetingUser'])->findOrFail($id);
-
-        $visit->update([
-            'status' => 'rejected',
-            'rejected_reason' => $request->reason,
-        ]);
-
-        // Dispatch event for real-time updates
-        broadcast(new VisitRejected($visit));
-
-        // Send email notification to visitor
-        $emailData = [
-            'visitor_name' => $visit->visitor->name,
-            'visitor_email' => $visit->visitor->email,
-            'reason' => $request->reason,
-            'host_name' => $visit->meetingUser->name,
-        ];
-
         try {
-            Mail::to($visit->visitor->email)->send(new \App\Mail\VisitRejectedEmail($emailData));
-        } catch (\Exception $e) {
-            Log::error('Failed to send rejection email', [
-                'error' => $e->getMessage(),
-                'visit_id' => $visit->id,
+            // Validate input
+            $validated = $request->validate([
+                'reason' => 'required|string|max:500',
             ]);
-        }
 
-        return back()->with('success', 'Visit rejected successfully.');
+            $visit = Visit::with(['visitor', 'meetingUser'])->findOrFail($id);
+
+            $visit->update([
+                'status' => 'rejected',
+                'rejected_reason' => $validated['reason'],
+            ]);
+
+            // Dispatch event for real-time updates
+            broadcast(new VisitRejected($visit));
+
+            // Send email notification to visitor
+            $emailData = [
+                'visitor_name' => $visit->visitor->name,
+                'visitor_email' => $visit->visitor->email,
+                'reason' => $validated['reason'],
+                'host_name' => $visit->meetingUser->name,
+            ];
+
+            try {
+                Mail::to($visit->visitor->email)->send(new \App\Mail\VisitRejectedEmail($emailData));
+            } catch (\Exception $e) {
+                Log::error('Failed to send rejection email', [
+                    'error' => $e->getMessage(),
+                    'visit_id' => $visit->id,
+                ]);
+            }
+
+            // Always return JSON for this endpoint with explicit content type
+            return response()->json([
+                'success' => true,
+                'message' => 'Visit rejected successfully.'
+            ])->header('Content-Type', 'application/json');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Return validation errors as JSON with explicit content type
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error: ' . implode(', ', $e->errors())
+            ], 422)->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            Log::error('Error rejecting visit', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'visit_id' => $id,
+            ]);
+
+            // Always return JSON error with explicit content type
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reject visit: ' . $e->getMessage()
+            ], 500)->header('Content-Type', 'application/json');
+        }
     }
 
     /**

@@ -851,10 +851,12 @@
 
             if (panel.style.display === 'none') {
                 panel.style.display = 'block';
+                panel.style.right = '0';
                 overlay.style.display = 'block';
                 loadNotifications();
             } else {
                 panel.style.display = 'none';
+                panel.style.right = '-400px';
                 overlay.style.display = 'none';
             }
         }
@@ -894,9 +896,9 @@
                                                 <button class="btn btn-sm btn-reject" onclick="rejectFromNotification(${visit.id})">
                                                     <i class="fas fa-times me-1"></i> Reject
                                                 </button>
-                                                <a href="/visitor/${visit.id}" class="btn btn-sm btn-outline-light btn-sm">
+                                                <button class="btn btn-sm btn-outline-light" onclick="redirectToVisit(event, ${visit.id})">
                                                     <i class="fas fa-eye"></i>
-                                                </a>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -951,17 +953,36 @@
                             'Content-Type': 'application/json',
                         }
                     })
-                    .then(response => response.json())
+                    .then(async response => {
+                        // Get response text first to check what we got
+                        const responseText = await response.text();
+                        console.log('Response status:', response.status);
+                        console.log('Response text:', responseText);
+
+                        // Check if response is OK
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        // Try to parse as JSON
+                        try {
+                            return JSON.parse(responseText);
+                        } catch (e) {
+                            console.error('Failed to parse response as JSON:', e);
+                            throw new Error('Server returned invalid response. Check browser console for details.');
+                        }
+                    })
                     .then(data => {
                         if (data.success) {
                             Swal.fire('Approved!', data.message, 'success');
                             loadNotifications();
                         } else {
-                            Swal.fire('Error!', data.message, 'error');
+                            Swal.fire('Error!', data.message || 'Unknown error occurred', 'error');
                         }
                     })
                     .catch(error => {
-                        Swal.fire('Error!', 'Failed to approve visit', 'error');
+                        console.error('Approve error:', error);
+                        Swal.fire('Error!', 'Failed to approve visit: ' + error.message, 'error');
                     });
                 }
             });
@@ -999,20 +1020,63 @@
                             reason: result.value
                         })
                     })
-                    .then(response => response.json())
+                    .then(async response => {
+                        // Get response text first to check what we got
+                        const responseText = await response.text();
+                        console.log('Response status:', response.status);
+                        console.log('Response text:', responseText);
+
+                        // Check if response is OK
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        // Try to parse as JSON
+                        try {
+                            return JSON.parse(responseText);
+                        } catch (e) {
+                            console.error('Failed to parse response as JSON:', e);
+                            throw new Error('Server returned invalid response. Check browser console for details.');
+                        }
+                    })
                     .then(data => {
                         if (data.success) {
                             Swal.fire('Rejected!', data.message, 'success');
                             loadNotifications();
                         } else {
-                            Swal.fire('Error!', data.message, 'error');
+                            Swal.fire('Error!', data.message || 'Unknown error occurred', 'error');
                         }
                     })
                     .catch(error => {
-                        Swal.fire('Error!', 'Failed to reject visit', 'error');
+                        console.error('Reject error:', error);
+                        Swal.fire('Error!', 'Failed to reject visit: ' + error.message, 'error');
                     });
                 }
             });
+        }
+
+        function redirectToVisit(event, visitId) {
+            // Prevent any event bubbling and default behavior
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+            }
+
+            // Close notification panel first
+            const panel = document.getElementById('notification-panel');
+            const overlay = document.getElementById('notification-overlay');
+
+            // Hide panel and overlay completely
+            panel.style.display = 'none';
+            panel.style.right = '-400px';
+            panel.classList.remove('show');
+            overlay.style.display = 'none';
+
+            // Small delay to ensure DOM updates before redirect
+            setTimeout(() => {
+                window.location.replace(`/visitor/${visitId}`);
+            }, 150);
         }
 
         // Load notification count on page load
