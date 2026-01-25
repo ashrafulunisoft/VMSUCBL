@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
 
 class Visitor extends Model
 {
-    //
-     use SoftDeletes;
+    use SoftDeletes, Notifiable;
 
      protected $table = 'visitors';
 
@@ -40,5 +40,21 @@ class Visitor extends Model
     {
         return $this->hasOne(VisitorOtp::class)
                     ->where('is_active', true);
+    }
+
+    /**
+     * Route notifications for the mail channel.
+     */
+    public function routeNotificationForMail($notification)
+    {
+        return $this->email;
+    }
+
+    /**
+     * Route notifications for the SMS channel.
+     */
+    public function routeNotificationForSms($notification)
+    {
+        return $this->phone;
     }
 }

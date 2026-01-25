@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'UCB Bank - VMS Professional Dashboard')</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,6 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     @stack('styles')
 
@@ -481,6 +484,17 @@
             text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
         }
 
+        .input-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-blue);
+            opacity: 0.6;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
         /* --- Dashboard Utility Classes --- */
         .fs-9 { font-size: 9px; }
         .letter-spacing-1 { letter-spacing: -1px; }
@@ -516,8 +530,12 @@
             </div>
 
             <nav>
-                <a href="#" class="sidebar-item active"><i class="fas fa-th-large"></i> Dashboard</a>
-                <a href="#" class="sidebar-item"><i class="fas fa-plus"></i> Create Invite</a>
+                <a href="{{ route('admin.dashboard') }}" class="sidebar-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fas fa-th-large"></i> Dashboard</a>
+                <a href="{{ route('admin.visitor.registration.create') }}" class="sidebar-item {{ request()->routeIs('admin.visitor.registration.create') ? 'active' : '' }}"><i class="fas fa-plus"></i> Visitor Registration</a>
+                <a href="{{ route('admin.visitor.list') }}" class="sidebar-item {{ request()->routeIs('admin.visitor.list') ? 'active' : '' }}"><i class="fas fa-users"></i> Visitor List</a>
+                @can('view live dashboard')
+                <a href="{{ route('visitor.live') }}" class="sidebar-item {{ request()->routeIs('visitor.live') ? 'active' : '' }}"><i class="fas fa-broadcast-tower"></i> Live Dashboard</a>
+                @endcan
                 <a href="#" class="sidebar-item"><i class="fas fa-history"></i> View History</a>
                 <a href="#" class="sidebar-item"><i class="fas fa-user-plus"></i> Add New User</a>
                 <a href="#" class="sidebar-item"><i class="fas fa-list"></i> Visitor's Log</a>

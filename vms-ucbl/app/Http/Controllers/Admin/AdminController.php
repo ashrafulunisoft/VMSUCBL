@@ -3,8 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use App\Models\User;
+use App\Models\Visitor;
+use App\Models\Visit;
+use App\Models\VisitType;
+use App\Notifications\VisitorRegistered;
+use App\Services\EmailNotificationService;
+use App\Services\SmsNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -62,7 +72,8 @@ class AdminController extends Controller
     public function createAssignRole(){
         $users = User::all();
         $roles = Role::all();
-        return view('vms.backend.admin.Assignrole', compact('users', 'roles'));
+        $permissions = Permission::all();
+        return view('vms.backend.admin.Assignrole', compact('users', 'roles', 'permissions'));
     }
 
     public function storeAssignRole(Request $request){
@@ -80,11 +91,18 @@ class AdminController extends Controller
         // Remove existing roles and assign new one
         $user->syncRoles([$role->id]);
 
-        // Log the assignment (optional - you might want to create a role_assignments table)
-        // For now, we'll just return success
+        // Assign permissions if selected
+        if ($request->has('permissions') && is_array($request->permissions)) {
+            // Convert permission IDs to Permission models
+            $permissionModels = Permission::whereIn('id', $request->permissions)->get();
+            $user->syncPermissions($permissionModels);
+        } else {
+            // Remove all permissions if none selected
+            $user->syncPermissions([]);
+        }
 
         return redirect()->route('admin.role.assign.create')
-            ->with('success', 'Role "' . $role->name . '" assigned to ' . $user->name . ' successfully!');
+            ->with('success', 'Role "' . $role->name . '" with permissions assigned to ' . $user->name . ' successfully!');
     }
 
     public function removeUserRole(Request $request){
@@ -98,5 +116,430 @@ class AdminController extends Controller
 
         return redirect()->route('admin.role.assign.create')
             ->with('success', 'Role removed from ' . $user->name . ' successfully!');
+    }
+
+    public function createVisitorRegistration(){
+        $users = User::all();
+        $visitTypes = VisitType::all();
+        return view('vms.backend.admin.VisitorRegistration', compact('users', 'visitTypes'));
+    }
+
+    public function storeVisitorRegistration(Request $request){
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:visitors,email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'company' => 'nullable|string|max:255',
+            'host_name' => 'required|string|max:255',
+            'purpose' => 'required|string|max:500',
+            'visit_date' => 'required|date|after_or_equal:today',
+            'visit_type_id' => 'required|exists:visit_types,id',
+            'face_image' => 'nullable|string',
+        ]);
+
+        // Log the start of visitor registration process
+        Log::info('Starting visitor registration process', [
+            'admin_name' => Auth::user()->name ?? 'System',
+            'admin_email' => Auth::user()->email ?? 'N/A',
+            'visitor_name' => $request->name,
+            'visitor_email' => $request->email,
+            'visit_date' => $request->visit_date,
+            'ip_address' => $request->ip(),
+            'timestamp' => now()->toDateTimeString()
+        ]);
+
+        try {
+            // Create or find visitor
+            $visitor = Visitor::firstOrCreate(
+                ['email' => $request->email],
+                [
+                    'name' => $request->name,
+                    'phone' => $request->phone,
+                    'address' => $request->company,
+                    'is_blocked' => false,
+                ]
+            );
+
+            Log::info('Visitor record created/retrieved', [
+                'visitor_id' => $visitor->id,
+                'visitor_name' => $visitor->name,
+                'visitor_email' => $visitor->email,
+                'is_new_visitor' => $visitor->wasRecentlyCreated ?? false
+            ]);
+
+            // Find or create host user by name
+            $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
+
+            if (!$hostUser) {
+                // If host doesn't exist, use current admin as default host
+                $hostUser = Auth::user();
+                Log::warning('Host not found, using current admin as default host', [
+                    'requested_host' => $request->host_name,
+                    'default_host' => $hostUser->name,
+                    'default_host_id' => $hostUser->id
+                ]);
+            }
+
+            // Create visit record
+            $visit = Visit::create([
+                'visitor_id' => $visitor->id,
+                'meeting_user_id' => $hostUser->id,
+                'visit_type_id' => $request->visit_type_id,
+                'purpose' => $request->purpose,
+                'schedule_time' => $request->visit_date,
+                'status' => 'approved', // Auto-approve when created by admin
+                'approved_at' => now(),
+            ]);
+
+            Log::info('Visit record created successfully', [
+                'visit_id' => $visit->id,
+                'visitor_id' => $visit->visitor_id,
+                'host_id' => $visit->meeting_user_id,
+                'visit_type_id' => $visit->visit_type_id,
+                'schedule_time' => $visit->schedule_time,
+                'status' => $visit->status,
+                'approved_at' => $visit->approved_at
+            ]);
+
+            // Prepare email data
+            $emailData = [
+                'visitor_name' => $visitor->name,
+                'visitor_email' => $visitor->email,
+                'visitor_phone' => $visitor->phone,
+                'visitor_company' => $visitor->address,
+                'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+                'visit_type' => $visit->type->name ?? 'N/A',
+                'purpose' => $visit->purpose,
+                'host_name' => $hostUser->name,
+                'status' => $visit->status,
+            ];
+
+            // Use EmailNotificationService to send email
+            $emailService = new EmailNotificationService();
+            $emailSent = $emailService->sendVisitorRegistrationEmail($emailData);
+
+            if ($emailSent) {
+                Log::info('Visitor registration email sent successfully', [
+                    'visit_id' => $visit->id,
+                    'visitor_email' => $visitor->email,
+                    'sent_at' => now()->toDateTimeString()
+                ]);
+            } else {
+                Log::error('Failed to send visitor registration email', [
+                    'visit_id' => $visit->id,
+                    'visitor_email' => $visitor->email
+                ]);
+            }
+
+            // Send SMS notification if phone number exists
+            if ($visitor->phone) {
+                // Prepare SMS data
+                $smsData = [
+                    'visitor_name' => $visitor->name,
+                    'visitor_phone' => $visitor->phone,
+                    'visitor_email' => $visitor->email,
+                    'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+                    'visit_type' => $visit->type->name ?? 'N/A',
+                    'host_name' => $hostUser->name,
+                    'status' => $visit->status,
+                ];
+
+                // Prepare SMS message
+                $smsMessage = "Dear {$visitor->name}, Your visit to UCB Bank is confirmed for " .
+                              \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A') .
+                              ". Host: {$hostUser->name}. Status: {$visit->status}. Thank you!";
+
+                // Use SmsNotificationService to send SMS immediately (synchronous)
+                $smsService = new SmsNotificationService();
+
+                // Format phone number to 880XXXXXXXXXX format
+                $phone = $visitor->phone;
+                // Remove +, spaces, and ensure starts with 880
+                $phone = preg_replace('/[^0-9]/', '', $phone);
+                if (strpos($phone, '880') !== 0) {
+                    $phone = '88' . $phone;
+                }
+
+                $smsResult = $smsService->send($phone, $smsMessage);
+                $smsSent = $smsResult['success'] ?? false;
+
+                if ($smsSent) {
+                    Log::info('SMS notification sent successfully', [
+                        'visit_id' => $visit->id,
+                        'visitor_phone' => $phone,
+                        'message_id' => $smsResult['message_id'] ?? 'N/A',
+                        'sent_at' => now()->toDateTimeString()
+                    ]);
+                } else {
+                    Log::error('Failed to send SMS notification', [
+                        'visit_id' => $visit->id,
+                        'visitor_phone' => $phone,
+                        'error' => $smsResult['message'] ?? 'Unknown error'
+                    ]);
+                }
+            }
+
+            // Log successful completion of visitor registration
+            Log::info('Visitor registration completed successfully', [
+                'visitor_id' => $visitor->id,
+                'visit_id' => $visit->id,
+                'visitor_name' => $visitor->name,
+                'visitor_email' => $visitor->email,
+                'visit_date' => $visit->schedule_time,
+                'host_name' => $hostUser->name,
+                'status' => $visit->status,
+                'email_sent' => $emailSent,
+                'sms_sent' => ($visitor->phone && config('sms.enabled')) ? 'attempted' : 'skipped',
+                'registered_by' => Auth::user()->name ?? 'System',
+                'completed_at' => now()->toDateTimeString()
+            ]);
+
+            return redirect()->route('admin.visitor.registration.create')
+                ->with('success', 'Visitor ' . $visitor->name . ' registered successfully!');
+
+        } catch (\Exception $e) {
+            // Log error during visitor registration
+            Log::error('Error during visitor registration', [
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'visitor_name' => $request->name ?? 'N/A',
+                'visitor_email' => $request->email ?? 'N/A',
+                'trace' => $e->getTraceAsString(),
+                'occurred_at' => now()->toDateTimeString()
+            ]);
+
+            return back()->with('error', 'Failed to register visitor: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function searchHost(Request $request)
+    {
+        $query = $request->get('q');
+        $users = User::where('name', 'like', '%' . $query . '%')
+                    ->limit(10)
+                    ->get(['id', 'name']);
+
+        return response()->json($users);
+    }
+
+    public function checkVisitor(Request $request)
+    {
+        $email = $request->get('email');
+        $visitor = Visitor::where('email', $email)->first();
+
+        if ($visitor) {
+            return response()->json([
+                'success' => true,
+                'visitor' => [
+                    'name' => $visitor->name,
+                    'email' => $visitor->email,
+                    'phone' => $visitor->phone,
+                    'company' => $visitor->address,
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => false]);
+    }
+
+    public function checkVisitorByPhone(Request $request)
+    {
+        $phone = $request->get('phone');
+        $visitor = Visitor::where('phone', $phone)->first();
+
+        if ($visitor) {
+            return response()->json([
+                'success' => true,
+                'visitor' => [
+                    'name' => $visitor->name,
+                    'email' => $visitor->email,
+                    'phone' => $visitor->phone,
+                    'company' => $visitor->address,
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => false]);
+    }
+
+    public function visitorList()
+    {
+        $visitors = Visit::with(['visitor', 'type', 'meetingUser'])
+                         ->orderBy('created_at', 'desc')
+                         ->paginate(10);
+
+        return view('vms.backend.admin.visitor-list', compact('visitors'));
+    }
+
+    public function editVisitor($id)
+    {
+        $visit = Visit::with(['visitor', 'type', 'meetingUser'])->findOrFail($id);
+        $users = User::all();
+        $visitTypes = VisitType::all();
+
+        return view('vms.backend.admin.edit-visitor', compact('visit', 'users', 'visitTypes'));
+    }
+
+    public function updateVisitor(Request $request, $id)
+    {
+        $visit = Visit::findOrFail($id);
+        $visitor = Visitor::findOrFail($visit->visitor_id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:visitors,email,'.$visitor->id.'|max:255',
+            'phone' => 'nullable|string|max:20',
+            'company' => 'nullable|string|max:255',
+            'host_name' => 'required|string|max:255',
+            'purpose' => 'required|string|max:500',
+            'visit_date' => 'required|date|after_or_equal:today',
+            'visit_type_id' => 'required|exists:visit_types,id',
+            'status' => 'required|in:approved,pending,completed,cancelled',
+        ]);
+
+        try {
+            // Update visitor information
+            $visitor->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->company,
+            ]);
+
+            // Find host user
+            $hostUser = User::where('name', 'like', '%' . $request->host_name . '%')->first();
+            if (!$hostUser) {
+                $hostUser = Auth::user();
+            }
+
+            // Update visit
+            $oldStatus = $visit->status;
+            $visit->update([
+                'meeting_user_id' => $hostUser->id,
+                'visit_type_id' => $request->visit_type_id,
+                'purpose' => $request->purpose,
+                'schedule_time' => $request->visit_date,
+                'status' => $request->status,
+                'approved_at' => $request->status === 'approved' ? now() : $visit->approved_at,
+            ]);
+
+            // Log visit update
+            Log::info('Visit details updated', [
+                'visit_id' => $visit->id,
+                'visitor_name' => $visitor->name,
+                'old_status' => $oldStatus,
+                'new_status' => $visit->status,
+                'updated_by' => Auth::user()->name ?? 'System',
+                'updated_at' => now()->toDateTimeString()
+            ]);
+
+            // Send status update email if status changed
+            if ($oldStatus !== $visit->status) {
+                // Send email notification
+                $emailData = [
+                    'visitor_name' => $visitor->name,
+                    'visitor_email' => $visitor->email,
+                    'visitor_company' => $visitor->address,
+                    'visit_date' => \Carbon\Carbon::parse($visit->schedule_time)->format('F j, Y - g:i A'),
+                    'visit_type' => $visit->type->name ?? 'N/A',
+                    'purpose' => $visit->purpose,
+                    'host_name' => $hostUser->name,
+                    'status' => $visit->status,
+                    'remarks' => $request->remarks ?? null,
+                ];
+
+                $emailService = new EmailNotificationService();
+                $emailSent = $emailService->sendVisitStatusEmail($emailData);
+
+                if ($emailSent) {
+                    Log::info('Visit status email sent successfully', [
+                        'visit_id' => $visit->id,
+                        'visitor_email' => $visitor->email,
+                        'status' => $visit->status,
+                        'sent_at' => now()->toDateTimeString()
+                    ]);
+                } else {
+                    Log::error('Failed to send visit status email', [
+                        'visit_id' => $visit->id,
+                        'visitor_email' => $visitor->email,
+                        'status' => $visit->status
+                    ]);
+                }
+
+                // Send SMS notification if phone number exists
+                if ($visitor->phone) {
+                    // Prepare SMS message
+                    $statusMessages = [
+                        'approved' => 'Your visit has been approved.',
+                        'completed' => 'Your visit has been completed.',
+                        'cancelled' => 'Your visit has been cancelled.',
+                        'pending' => 'Your visit is pending approval.',
+                        'rejected' => 'Your visit has been rejected.',
+                    ];
+
+                    $statusMessage = $statusMessages[$visit->status] ?? "Your visit status is: " . ucfirst($visit->status);
+                    $smsMessage = "Dear {$visitor->name}, {$statusMessage} Thank you!";
+
+                    // Format phone number to 880XXXXXXXXXX format
+                    $phone = $visitor->phone;
+                    $phone = preg_replace('/[^0-9]/', '', $phone);
+                    if (strpos($phone, '880') !== 0) {
+                        $phone = '88' . $phone;
+                    }
+
+                    $smsService = new SmsNotificationService();
+                    $smsResult = $smsService->send($phone, $smsMessage);
+                    $smsSent = $smsResult['success'] ?? false;
+
+                    if ($smsSent) {
+                        Log::info('Visit status SMS sent successfully', [
+                            'visit_id' => $visit->id,
+                            'visitor_phone' => $phone,
+                            'status' => $visit->status,
+                            'message_id' => $smsResult['message_id'] ?? 'N/A',
+                            'sent_at' => now()->toDateTimeString()
+                        ]);
+                    } else {
+                        Log::error('Failed to send visit status SMS', [
+                            'visit_id' => $visit->id,
+                            'visitor_phone' => $phone,
+                            'status' => $visit->status,
+                            'error' => $smsResult['message'] ?? 'Unknown error'
+                        ]);
+                    }
+                }
+            }
+
+            // Check if request expects JSON (AJAX)
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Visit updated successfully!'
+                ]);
+            }
+
+            return redirect()->route('admin.visitor.list')
+                ->with('success', 'Visit updated successfully!');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function deleteVisitor($id)
+    {
+        $visit = Visit::findOrFail($id);
+        $visit->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Visit deleted successfully!'
+        ]);
     }
 }

@@ -16,12 +16,20 @@ class Visit extends Model
         'schedule_time',
         'status',
         'approved_at',
-        'rejected_reason'
+        'rejected_reason',
+        'otp',
+        'otp_verified_at',
+        'rfid',
+        'checkin_time',
+        'checkout_time'
     ];
 
     protected $casts = [
         'schedule_time' => 'datetime',
         'approved_at' => 'datetime',
+        'otp_verified_at' => 'datetime',
+        'checkin_time' => 'datetime',
+        'checkout_time' => 'datetime',
     ];
 
     public function visitor()
@@ -37,6 +45,11 @@ class Visit extends Model
     public function type()
     {
         return $this->belongsTo(VisitType::class, 'visit_type_id');
+    }
+
+    public function rfid()
+    {
+        return $this->hasOne(Rfid::class);
     }
 
 }
