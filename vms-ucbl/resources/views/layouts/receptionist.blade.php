@@ -851,10 +851,12 @@
 
             if (panel.style.display === 'none') {
                 panel.style.display = 'block';
+                panel.style.right = '0';
                 overlay.style.display = 'block';
                 loadNotifications();
             } else {
                 panel.style.display = 'none';
+                panel.style.right = '-400px';
                 overlay.style.display = 'none';
             }
         }
@@ -894,7 +896,7 @@
                                                 <button class="btn btn-sm btn-reject" onclick="rejectFromNotification(${visit.id})">
                                                     <i class="fas fa-times me-1"></i> Reject
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-light" onclick="redirectToVisit(${visit.id})">
+                                                <button class="btn btn-sm btn-outline-light" onclick="redirectToVisit(event, ${visit.id})">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                             </div>
@@ -1015,15 +1017,28 @@
             });
         }
 
-        function redirectToVisit(visitId) {
+        function redirectToVisit(event, visitId) {
+            // Prevent any event bubbling and default behavior
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+            }
+
             // Close notification panel first
             const panel = document.getElementById('notification-panel');
             const overlay = document.getElementById('notification-overlay');
+
+            // Hide panel and overlay completely
             panel.style.display = 'none';
+            panel.style.right = '-400px';
+            panel.classList.remove('show');
             overlay.style.display = 'none';
 
-            // Then redirect to visit page
-            window.location.href = `/visitor/${visitId}`;
+            // Small delay to ensure DOM updates before redirect
+            setTimeout(() => {
+                window.location.replace(`/visitor/${visitId}`);
+            }, 150);
         }
 
         // Load notification count on page load
