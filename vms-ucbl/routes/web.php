@@ -147,7 +147,6 @@ Route::get('/', function(){
     // $user = User::latest()->first();
     // $user->givePermissionTo('create users');
 
-    return "This is the Homepage ";
     return view('home');
 })->name('home');
 

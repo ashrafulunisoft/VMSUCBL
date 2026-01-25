@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCB Bank - Identity Revocation</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-gradient: radial-gradient(circle at center, #101d42 0%, #060b1d 100%);
+            --sidebar-bg: #111a30;
+            --active-blue: #4f46e5;
+            --neon-blue: #3b82f6;
+            --neon-red: #ff3131;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-blur: blur(35px);
+            
+            /* NEON BLOOM DEFINITIONS */
+            --bloom-red: 0 0 15px rgba(255, 49, 49, 0.7), 0 0 30px rgba(255, 49, 49, 0.3);
+            --bloom-blue: 0 0 15px rgba(59, 130, 246, 0.7), 0 0 35px rgba(59, 130, 246, 0.3);
+            --bloom-text-blue: 0 0 10px rgba(59, 130, 246, 0.5);
+            --bloom-text-red: 0 0 10px rgba(255, 49, 49, 0.5);
+            --bloom-white: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: #f1f5f9;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: var(--sidebar-bg);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 1100;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2.5rem;
+            padding-left: 0.5rem;
+        }
+
+        .logo-box {
+            width: 44px;
+            height: 44px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e3a8a;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: var(--bloom-white);
+        }
+
+        .logo-text { font-size: 1.5rem; font-weight: 800; color: white; letter-spacing: -0.5px; text-shadow: var(--bloom-white); }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.85rem 1.25rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 14px;
+            margin-bottom: 0.25rem;
+            transition: 0.3s;
+        }
+
+        .nav-item:hover { color: white; background: rgba(255, 255, 255, 0.05); }
+
+        .nav-item.active {
+            background: var(--active-blue);
+            color: white;
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+
+        .help-center-card {
+            margin-top: auto;
+            background: linear-gradient(180deg, #5046e5 0%, #3b82f6 100%);
+            border-radius: 24px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .btn-help {
+            background: white;
+            color: #1e3a8a;
+            border: none;
+            border-radius: 50px;
+            padding: 0.6rem;
+            width: 100%;
+            margin-top: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* --- Mobile Overlay & Toggle --- */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1050;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-right: 1rem;
+            backdrop-filter: blur(10px);
+            z-index: 1001;
+        }
+
+        /* --- Main Content --- */
+        .main-container {
+            margin-left: 260px;
+            padding: 3rem;
+            min-height: 100vh;
+            width: calc(100% - 260px);
+            transition: margin-left 0.3s ease, width 0.3s ease;
+        }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            gap: 1rem;
+        }
+
+        .header-titles h1 { font-size: 1.85rem; font-weight: 800; text-shadow: var(--bloom-white); margin-bottom: 0; }
+        .header-titles p { font-size: 0.85rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 1.2px; color: var(--neon-blue); text-shadow: var(--bloom-text-blue); margin-bottom: 0; }
+
+        .admin-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            white-space: nowrap;
+        }
+
+        .avatar-glow {
+            width: 38px;
+            height: 38px;
+            background: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: var(--bloom-blue);
+            flex-shrink: 0;
+        }
+
+        /* --- Glowing Labels --- */
+        .vms-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--neon-blue);
+            margin-bottom: 0.8rem;
+            display: block;
+            text-shadow: var(--bloom-text-blue);
+        }
+
+        /* --- Glowing Input Boxes --- */
+        .vms-input-static {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid var(--neon-blue) !important;
+            color: white !important;
+            border-radius: 18px;
+            padding: 1.2rem 1.5rem;
+            font-size: 1.05rem;
+            width: 100%;
+            font-weight: 600;
+            box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.1), 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+
+        .vms-textarea {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid rgba(255, 49, 49, 0.3) !important;
+            color: white !important;
+            border-radius: 20px;
+            padding: 1.2rem;
+            min-height: 140px;
+            resize: none;
+            width: 100%;
+            transition: 0.3s;
+        }
+
+        .vms-textarea:focus {
+            border-color: var(--neon-red) !important;
+            box-shadow: var(--bloom-red);
+            outline: none;
+        }
+
+        /* --- Glowing Icons --- */
+        .shield-icon-bloom {
+            width: 85px;
+            height: 85px;
+            background: rgba(255, 49, 49, 0.1);
+            border: 2px solid var(--neon-red);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neon-red);
+            margin-bottom: 1.5rem;
+            box-shadow: var(--bloom-red);
+            font-size: 36px;
+        }
+
+        /* --- Revocation Card --- */
+        .revocation-card-wow {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            padding: 3.5rem;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            animation: cardEntrance 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header-glow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .card-header-glow h2 { font-size: 2.2rem; font-weight: 800; color: #fff; text-shadow: var(--bloom-white); margin-bottom: 0.5rem; }
+        .card-header-glow p { font-size: 0.95rem; color: var(--neon-red); font-weight: 600; text-shadow: var(--bloom-text-red); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* --- ACTION BUTTONS (NEON BLOOM) --- */
+        .btn-neon-pill {
+            border-radius: 100px;
+            padding: 1.3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            font-size: 0.85rem;
+            border: none;
+            color: white !important;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex: 1;
+            text-decoration: none;
+        }
+
+        /* Block Button - Intense Red Neon */
+        .btn-revocation-block {
+            background: linear-gradient(135deg, #ff3131 0%, #d90429 100%);
+            box-shadow: var(--bloom-red);
+        }
+
+        .btn-revocation-block:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 50px rgba(255, 49, 49, 0.6);
+            filter: brightness(1.1);
+        }
+
+        /* Discard Button - Intense Blue Neon */
+        .btn-discard-neon {
+            background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+            box-shadow: var(--bloom-blue);
+        }
+
+        .btn-discard-neon:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 50px rgba(59, 130, 246, 0.6);
+            filter: brightness(1.15);
+        }
+
+        footer {
+            margin-top: 4rem;
+            text-align: center;
+            opacity: 0.4;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--neon-blue);
+            text-shadow: var(--bloom-text-blue);
+        }
+
+        /* --- Responsive Queries --- */
+        @media (max-width: 991px) {
+            .mobile-toggle { display: block; }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); box-shadow: 20px 0 60px rgba(0,0,0,0.8); }
+            .sidebar-overlay.active { display: block; }
+            .main-container { margin-left: 0; width: 100%; padding: 2rem 1.5rem; }
+            .top-header { flex-direction: column; align-items: flex-start; }
+            .admin-pill { width: 100%; justify-content: space-between; }
+        }
+
+        @media (max-width: 767px) {
+            .revocation-card-wow { padding: 2rem 1.5rem; border-radius: 24px; }
+            .card-header-glow h2 { font-size: 1.6rem; }
+            .shield-icon-bloom { width: 65px; height: 65px; font-size: 28px; }
+            .btn-neon-pill { padding: 1rem; font-size: 0.75rem; letter-spacing: 1.5px; }
+            .d-flex.gap-4 { flex-direction: column; }
+            .header-titles h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Overlay -->
+    <div class="sidebar-overlay" id="overlay"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-box">V</div>
+            <span class="logo-text">VMS</span>
+        </div>
+        <nav class="flex-column nav-menu">
+            <a href="#" class="nav-item"><i data-lucide="layout-grid"></i> Dashboard</a>
+            <a href="#" class="nav-item active"><i data-lucide="shield-alert"></i> Block Management</a>
+            <a href="#" class="nav-item"><i data-lucide="users"></i> All Users</a>
+        </nav>
+        <div class="help-center-card">
+            <div class="text-white mb-2"><i data-lucide="help-circle"></i></div>
+            <h6 class="fw-800 text-white mb-0">Help Center</h6>
+            <button class="btn-help">Get Help</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <header class="top-header">
+            <div class="d-flex align-items-center">
+                <button class="mobile-toggle" id="menuToggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="header-titles">
+                    <h1>Security Governance</h1>
+                    <p>Revocation Portal</p>
+                </div>
+            </div>
+            <div class="admin-pill">
+                <div class="text-end me-3">
+                    <span class="d-block fw-800" style="font-size: 0.75rem;">Admin Level 5</span>
+                    <span class="d-block opacity-50" style="font-size: 0.65rem;">Authorized</span>
+                </div>
+                <div class="avatar-glow">
+                    <i data-lucide="user" style="width: 20px;"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Identity Revocation Card WOW -->
+        <div class="revocation-card-wow">
+            <div class="card-header-glow">
+                <div class="shield-icon-bloom">
+                    <i data-lucide="shield-off"></i>
+                </div>
+                <h2>Identity Revocation</h2>
+                <p>Mandatory Access Restriction</p>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <label class="vms-label">Target Name</label>
+                    <input type="text" class="vms-input-static" value="Johnathon Doe" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="vms-label">Registered Phone</label>
+                    <input type="text" class="vms-input-static" value="017XXXXXXXX" readonly>
+                </div>
+                <div class="col-md-12">
+                    <label class="vms-label">Assigned RFID ID</label>
+                    <input type="text" class="vms-input-static" value="RFID-V-9921-X-CORP" readonly>
+                </div>
+                <div class="col-md-12">
+                    <label class="vms-label">Violation Statement</label>
+                    <textarea class="vms-textarea" placeholder="Explain the security breach or policy violation in detail..."></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex gap-4">
+                <!-- Updated Discard Button with Blue Neon Bloom -->
+                <a href="#" class="btn-neon-pill btn-discard-neon" onclick="history.back()">
+                    <i data-lucide="arrow-left"></i> Discard Action
+                </a>
+                <button class="btn-neon-pill btn-revocation-block">
+                    <i data-lucide="user-x"></i> Block Identity
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            © 2026 UCB BANK • SECURITY COMPLIANCE OPERATIONS
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const menuToggle = document.getElementById('menuToggle');
+
+        function toggleMenu() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            if (sidebar.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', toggleMenu);
+        }
+        if (overlay) {
+            overlay.addEventListener('click', toggleMenu);
+        }
+
+        // Close sidebar when clicking a nav item on mobile
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth < 992 && sidebar.classList.contains('active')) {
+                    toggleMenu();
+                }
+            });
+        });
+
+        // Re-check layout on window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 992) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+</body>
+</html>
