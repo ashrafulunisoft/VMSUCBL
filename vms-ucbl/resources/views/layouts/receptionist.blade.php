@@ -769,7 +769,7 @@
 
                 <!-- Reports - Permission Based -->
                 @can('view visitors')
-                <a href="#" class="sidebar-item">
+                <a href="{{ route('visitor.report') }}" class="sidebar-item {{ request()->routeIs('visitor.report') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i> Reports
                 </a>
                 @endcan

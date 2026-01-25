@@ -558,13 +558,19 @@ class VisitorController extends Controller
 
         Log::info('=== searchHost Called ===', ['query' => $query]);
 
-        $users = User::where('name', 'like', '%' . $query . '%')
-                    ->limit(10)
-                    ->get(['id', 'name']);
+        $users = User::where(function($q) use ($query) {
+                    $q->where('name', 'like', '%' . $query . '%')
+                      ->orWhere('email', 'like', '%' . $query . '%');
+                })
+                ->limit(10)
+                ->get(['id', 'name', 'email']);
 
         Log::info('Users found', ['count' => $users->count()]);
 
-        return response()->json($users);
+        return response()->json([
+            'success' => true,
+            'hosts' => $users
+        ]);
     }
 
     /**
@@ -985,5 +991,198 @@ class VisitorController extends Controller
         $visits = $visitsQuery->paginate(10);
 
         return view('vms.backend.visitor.checkin-checkout', compact('visits'));
+    }
+
+    /**
+     * Search visitors by phone number for autocomplete
+     */
+    public function searchVisitorByPhone(Request $request)
+    {
+        $phone = $request->get('q');
+
+        $visitors = Visitor::where('phone', 'like', "%{$phone}%")
+            ->where('is_blocked', false)
+            ->limit(10)
+            ->get(['id', 'name', 'phone', 'email']);
+
+        return response()->json([
+            'success' => true,
+            'visitors' => $visitors
+        ]);
+    }
+
+    /**
+     * Search hosts by email for autocomplete
+     */
+    public function searchHostByEmail(Request $request)
+    {
+        $email = $request->get('q');
+
+        $users = User::where('email', 'like', "%{$email}%")
+            ->limit(10)
+            ->get(['id', 'name', 'email']);
+
+        return response()->json([
+            'success' => true,
+            'hosts' => $users
+        ]);
+    }
+
+    /**
+     * Generate visitor report with date range and selected visitors
+     */
+    public function report(Request $request)
+    {
+        $selectedVisitorIds = $request->input('visitor_ids', []);
+        $hostEmail = $request->input('host_email');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Build query
+        $query = Visit::with(['visitor', 'type', 'meetingUser']);
+
+        // Apply filters using OR logic - visits matching ANY criteria should be included
+        if (!empty($selectedVisitorIds) || !empty($hostEmail) || ($startDate && $endDate)) {
+            $query->where(function($q) use ($selectedVisitorIds, $hostEmail, $startDate, $endDate) {
+                // Filter by selected visitors if any
+                if (!empty($selectedVisitorIds)) {
+                    $q->whereIn('visitor_id', $selectedVisitorIds);
+                }
+
+                // Filter by host email if provided (JavaScript sends host ID as host_email)
+                if (!empty($hostEmail)) {
+                    $q->orWhere('meeting_user_id', $hostEmail);
+                }
+
+                // Apply date range filter if provided
+                if ($startDate && $endDate) {
+                    $q->orWhereBetween('schedule_time', [$startDate, $endDate]);
+                }
+            });
+        }
+
+        // If user doesn't have view visitors permission, show only their own visits
+        if (!auth()->user()->can('view visitors')) {
+            $query->where('meeting_user_id', auth()->id());
+        }
+
+        $visits = $query->orderBy('schedule_time', 'desc')->paginate(20);
+
+        // Get selected visitors details for display
+        $selectedVisitors = [];
+        if (!empty($selectedVisitorIds)) {
+            $selectedVisitors = Visitor::whereIn('id', $selectedVisitorIds)
+                ->get(['id', 'name', 'phone', 'email']);
+        }
+
+        // Get selected host for display
+        $selectedHost = null;
+        if (!empty($hostEmail)) {
+            $selectedHost = User::where('email', $hostEmail)->first(['id', 'name', 'email']);
+        }
+
+        return view('vms.backend.visitor.report', compact(
+            'visits',
+            'selectedVisitors',
+            'selectedHost',
+            'startDate',
+            'endDate'
+        ));
+    }
+
+    /**
+     * Export visitor report to CSV
+     */
+    public function exportReportCsv(Request $request)
+    {
+        $selectedVisitorIds = $request->input('visitor_ids', []);
+        $hostEmail = $request->input('host_email');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Log received parameters for debugging
+        Log::info('CSV Export - Received parameters', [
+            'visitor_ids' => $selectedVisitorIds,
+            'host_email' => $hostEmail,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'all_request_data' => $request->all(),
+        ]);
+
+        // Get selected visitors
+        $visitors = [];
+        if (!empty($selectedVisitorIds)) {
+            $visitors = Visitor::whereIn('id', $selectedVisitorIds)->get();
+        }
+
+        // Get selected host (host_email parameter contains host ID)
+        $host = null;
+        if (!empty($hostEmail)) {
+            $host = User::find($hostEmail);
+        }
+
+        // Generate CSV content
+        $headers = [
+            'Type',
+            'Name',
+            'Phone',
+            'Email',
+            'Host Name',
+            'Visit Type',
+            'Purpose',
+            'Scheduled Date',
+            'Check-in',
+            'Check-out',
+            'Status'
+        ];
+
+        $csv = fopen('php://temp', 'r+');
+        fputcsv($csv, $headers);
+
+        // Add selected visitors to CSV
+        foreach ($visitors as $visitor) {
+            fputcsv($csv, [
+                'Visitor',
+                $visitor->name ?? 'N/A',
+                $visitor->phone ?? 'N/A',
+                $visitor->email ?? 'N/A',
+                $host ? $host->name : 'N/A',
+                'N/A',
+                '-',
+                '-',
+                '-',
+                '-',
+                'Selected'
+            ]);
+        }
+
+        // Add selected host to CSV
+        if ($host) {
+            fputcsv($csv, [
+                'Host',
+                '-',
+                '-',
+                $host->email ?? 'N/A',
+                $host->name,
+                'N/A',
+                '-',
+                '-',
+                '-',
+                '-',
+                'Selected'
+            ]);
+        }
+
+        rewind($csv);
+        $content = stream_get_contents($csv);
+        fclose($csv);
+
+        // Generate filename with date range
+        $dateRange = ($startDate ?? 'all') . '_to_' . ($endDate ?? 'all');
+        $fileName = 'visitor_report_' . $dateRange . '_' . time() . '.csv';
+
+        return response($content)
+            ->header('Content-Type', 'text/csv')
+            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
     }
 }
