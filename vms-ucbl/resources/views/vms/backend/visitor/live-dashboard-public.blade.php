@@ -64,6 +64,15 @@
             border-radius: 16px;
         }
 
+        .glass-table-container {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
         .logo-vms {
             background: linear-gradient(135deg, var(--accent-indigo), var(--accent-blue));
             color: #fff;
@@ -113,6 +122,13 @@
 
         .table-dark {
             background: transparent;
+            margin: 0;
+        }
+
+        .table-dark thead {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .table-dark th {
@@ -123,7 +139,10 @@
             font-size: 0.75rem;
             letter-spacing: 1.5px;
             padding: 1rem;
-            background: rgba(0, 0, 0, 0.3);
+            background: transparent;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .table-dark td {
@@ -131,10 +150,42 @@
             padding: 1rem;
             transition: all 0.3s;
             color: #fff;
+            background: transparent;
+        }
+
+        .table-dark tbody tr {
+            background: transparent;
+            transition: all 0.3s;
         }
 
         .table-dark tbody tr:hover {
             background: rgba(255, 255, 255, 0.05);
+        }
+
+        .table-responsive {
+            background: transparent;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .avatar {
@@ -145,74 +196,30 @@
             font-weight: 800;
         }
 
-        .btn-circle {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            transition: all 0.3s;
-            color: inherit;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .btn-circle:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-success {
-            background: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.4);
-        }
-
-        .btn-warning {
-            background: rgba(234, 179, 8, 0.2);
-            color: #facc15;
-            border: 1px solid rgba(234, 179, 8, 0.4);
-        }
-
-        .btn-info {
-            background: rgba(59, 130, 246, 0.2);
-            color: #60a5fa;
+        .rfid-badge {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(59, 130, 246, 0.4);
+            color: #e0f2fe;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
-        .btn-primary {
-            background: rgba(79, 70, 229, 0.2);
-            color: #818cf8;
-            border: 1px solid rgba(79, 70, 229, 0.4);
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        .fade-in-success {
-            animation: fadeInSuccess 0.5s ease-in;
-        }
-
-        .fade-out {
-            animation: fadeOut 0.5s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeInSuccess {
-            from { opacity: 0; transform: scale(0.95); background-color: rgba(34, 197, 94, 0.2); }
-            to { opacity: 1; transform: scale(1); background-color: transparent; }
-        }
-
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+        .rfid-badge:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%);
+            border-color: rgba(59, 130, 246, 0.6);
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
         }
 
         @media (max-width: 1200px) {
@@ -232,12 +239,61 @@
                 padding: 1.5rem;
                 border-radius: 20px;
             }
+            
             .table-dark {
                 font-size: 0.85rem;
+                white-space: nowrap;
             }
+            
             .table-dark th,
             .table-dark td {
                 padding: 0.75rem;
+            }
+            
+            .glass-table-container {
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            
+            .table-dark thead {
+                background: rgba(0, 0, 0, 0.2);
+            }
+            
+            .table-dark th {
+                background: transparent;
+            }
+            
+            .table-dark td {
+                background: transparent;
+            }
+            
+            .table-dark tbody tr {
+                background: transparent;
+            }
+            
+            .table-dark tbody tr:hover {
+                background: rgba(255, 255, 255, 0.05);
+            }
+            
+            .table-responsive {
+                overflow-x: auto;
+                background: transparent;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .glass-card {
+                padding: 1rem;
+            }
+            
+            .table-dark {
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+            
+            .table-dark th,
+            .table-dark td {
+                padding: 0.5rem;
             }
         }
     </style>
@@ -335,8 +391,7 @@
                             <i class="fas fa-bolt me-1"></i> Live Updates
                         </span>
                         <span class="text-white-50 small">
-                            <i class="fas fa-clock me-1"></i>
-                            Last updated: <span id="lastUpdated">Just now</span>
+                            <i class="fas fa-clock me-1"></i> Last updated: <span id="lastUpdated">Just now</span>
                         </span>
                     </div>
                     <button onclick="loadVisitors()" class="btn btn-sm btn-gradient" style="padding: 0.5rem 1.5rem; font-size: 0.75rem;">
@@ -361,7 +416,7 @@
                         </thead>
                         <tbody>
                             @forelse($visits as $visit)
-                                <tr id="visit-{{ $visit->id }}" data-status="{{ $visit->status }}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s;">
+                                <tr id="visit-{{ $visit->id }}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s;">
                                     <td style="padding: 1rem; color: #fff;">
                                         <span class="fw-800" style="color: #3b82f6;">#{{ $visit->id }}</span>
                                     </td>
@@ -392,24 +447,22 @@
                                     </td>
                                     <td style="padding: 1rem;">
                                         @if($visit->rfid)
-                                            <code class="badge bg-info" style="font-size: 0.7rem; padding: 0.4rem 0.8rem;">
+                                            <span class="rfid-badge">
                                                 {{ $visit->rfid }}
-                                            </code>
+                                            </span>
                                         @else
                                             <span class="text-white-50 small">N/A</span>
                                         @endif
                                     </td>
                                     <td style="padding: 1rem;">
                                         <div class="text-white-50 small">
-                                            <i class="fas fa-calendar me-1"></i>
-                                            {{ \Carbon\Carbon::parse($visit->schedule_time)->format('M j, g:i A') }}
+                                            <i class="fas fa-calendar me-1"></i> {{ \Carbon\Carbon::parse($visit->schedule_time)->format('M j, g:i A') }}
                                         </div>
                                     </td>
                                     <td style="padding: 1rem;">
                                         @if($visit->checkin_time)
                                             <div class="text-success small">
-                                                <i class="fas fa-check-circle me-1"></i>
-                                                {{ \Carbon\Carbon::parse($visit->checkin_time)->format('g:i A') }}
+                                                <i class="fas fa-check-circle me-1"></i> {{ \Carbon\Carbon::parse($visit->checkin_time)->format('g:i A') }}
                                             </div>
                                         @else
                                             <span class="text-white-50 small">Not checked in</span>
@@ -435,12 +488,10 @@
             <!-- Footer Info -->
             <div class="d-flex justify-content-between align-items-center text-white-50 small" style="padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05);">
                 <div>
-                    <i class="fas fa-bolt me-1"></i>
-                    Real-time updates via WebSocket
+                    <i class="fas fa-bolt me-1"></i> Real-time updates via WebSocket
                 </div>
                 <div>
-                    <i class="fas fa-shield-alt me-1"></i>
-                    Secure & Monitored
+                    <i class="fas fa-shield-alt me-1"></i> Secure & Monitored
                 </div>
             </div>
         </div>
@@ -489,11 +540,11 @@
             }
 
             tableBody.innerHTML = visits.map(visit => {
-                const rfidBadge = visit.rfid ? `<code class="badge bg-info" style="font-size: 0.7rem; padding: 0.4rem 0.8rem;">${visit.rfid}</code>` : '<span class="text-white-50 small">N/A</span>';
+                const rfidBadge = visit.rfid ? `<span class="rfid-badge">${visit.rfid}</span>` : '<span class="text-white-50 small">N/A</span>';
                 const checkinTime = visit.checkin_time ? `<div class="text-success small"><i class="fas fa-check-circle me-1"></i>${formatTime(visit.checkin_time)}</div>` : '<span class="text-white-50 small">Not checked in</span>';
                 
                 return `
-                    <tr id="visit-${visit.id}" data-status="${visit.status}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s;">
+                    <tr id="visit-${visit.id}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s;">
                         <td style="padding: 1rem; color: #fff;">
                             <span class="fw-800" style="color: #3b82f6;">#${visit.id}</span>
                         </td>
@@ -527,8 +578,7 @@
                         </td>
                         <td style="padding: 1rem;">
                             <div class="text-white-50 small">
-                                <i class="fas fa-calendar me-1"></i>
-                                ${formatDate(visit.schedule_time)}
+                                <i class="fas fa-calendar me-1"></i> ${formatDate(visit.schedule_time)}
                             </div>
                         </td>
                         <td style="padding: 1rem;">
