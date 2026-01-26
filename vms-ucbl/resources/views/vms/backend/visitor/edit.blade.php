@@ -319,9 +319,14 @@
 
             try {
                 const response = await fetch(`{{ route('visitor.search-host') }}?q=${encodeURIComponent(query)}`);
-                const users = await response.json();
-                console.log('Hosts found:', users);
-                displaySuggestions(users);
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (data.success && data.hosts) {
+                    displaySuggestions(data.hosts);
+                } else {
+                    suggestionsBox.classList.remove('show');
+                }
             } catch (error) {
                 console.error('Error searching hosts:', error);
             }

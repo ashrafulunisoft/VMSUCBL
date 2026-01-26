@@ -299,8 +299,13 @@
 
             try {
                 const response = await fetch(`{{ route('admin.visitor.registration.search-host') }}?q=${encodeURIComponent(query)}`);
-                const users = await response.json();
-                displaySuggestions(users);
+                const data = await response.json();
+
+                if (data.success && data.hosts) {
+                    displaySuggestions(data.hosts);
+                } else {
+                    suggestionsBox.classList.remove('show');
+                }
             } catch (error) {
                 console.error('Error searching hosts:', error);
             }

@@ -308,9 +308,14 @@
                 const response = await fetch(url);
                 console.log('Response status:', response.status);
 
-                const users = await response.json();
-                console.log('Users found:', users);
-                displaySuggestions(users);
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (data.success && data.hosts) {
+                    displaySuggestions(data.hosts);
+                } else {
+                    suggestionsBox.classList.remove('show');
+                }
             } catch (error) {
                 console.error('Error searching hosts:', error);
             }
