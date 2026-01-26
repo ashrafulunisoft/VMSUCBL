@@ -1,155 +1,266 @@
 @extends('layouts.admin')
 
+@section('title', 'Admin Dashboard - UCB Bank')
+
 @section('content')
-            <!-- Header -->
-            <div class="header-section">
+    <!-- Header -->
+    <div class="header-section">
+        <div>
+            <h3 class="fw-800 mb-1 text-white letter-spacing-1">Admin Dashboard</h3>
+            <p class="sub-label mb-0">Welcome back, {{ Auth::user()->name }}</p>
+        </div>
+        <div class="header-profile-box glass-card">
+            <div class="avatar bg-primary">
+                <i class="fas fa-user-tie text-white small"></i>
+            </div>
+            <div>
+                <p class="small fw-800 mb-0 text-white">{{ Auth::user()->name }}</p>
+                <span class="sub-label fs-9">Administrator</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl">
+            <div class="glass-card summary-card">
                 <div>
-                    <h3 class="fw-800 mb-1 text-white letter-spacing-1"> Main Dashboard</h3>
-                    <p class="sub-label mb-0">System Status & Monitoring</p>
+                    <span class="sub-label d-block mb-1">Total Visitors</span>
+                    <h2>{{ $stats['total_visitors'] }}</h2>
                 </div>
-                <div class="header-profile-box glass-card">
-                    <div class="avatar bg-primary">
-                        <i class="fas fa-user-tie text-white small"></i>
-                    </div>
-                    <div>
-                        <p class="small fw-800 mb-0 text-white">Admin Pankaj</p>
-                        <span class="sub-label fs-9">Security Lead</span>
-                    </div>
-                </div>
+                <div class="summary-icon"><i class="fas fa-users"></i></div>
             </div>
-
-            <!-- Stats Row -->
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-xl">
-                    <div class="glass-card summary-card">
-                        <div>
-                            <span class="sub-label d-block mb-1">Expected</span>
-                            <h2>20</h2>
-                        </div>
-                        <div class="summary-icon"><i class="fas fa-user"></i></div>
-                    </div>
+        </div>
+        <div class="col-6 col-xl">
+            <div class="glass-card summary-card">
+                <div>
+                    <span class="sub-label d-block mb-1">Today's Visits</span>
+                    <h2>{{ $stats['visits_today'] }}</h2>
                 </div>
-                <div class="col-6 col-xl">
-                    <div class="glass-card summary-card">
-                        <div>
-                            <span class="sub-label d-block mb-1">Meetings</span>
-                            <h2>10</h2>
-                        </div>
-                        <div class="summary-icon"><i class="fas fa-users"></i></div>
-                    </div>
-                </div>
-                <div class="col-6 col-xl">
-                    <div class="glass-card summary-card">
-                        <div>
-                            <span class="sub-label d-block mb-1">Defaulted</span>
-                            <h2>05</h2>
-                        </div>
-                        <div class="summary-icon text-danger" style="background:rgba(220,53,69,0.1)"><i class="fas fa-user-xmark"></i></div>
-                    </div>
-                </div>
-                <div class="col-6 col-xl">
-                    <div class="glass-card summary-card">
-                        <div>
-                            <span class="sub-label d-block mb-1">Pending</span>
-                            <h2>21</h2>
-                        </div>
-                        <div class="summary-icon text-warning" style="background:rgba(255,193,7,0.1)"><i class="fas fa-signal"></i></div>
-                    </div>
-                </div>
-                <div class="col-12 col-xl">
-                    <div class="glass-card summary-card justify-content-center cursor-pointer border-dashed" style="border-width: 2px;">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="fas fa-plus"></i>
-                            <span class="fw-bold text-uppercase fs-9">Add New Visitor</span>
-                        </div>
-                    </div>
-                </div>
+                <div class="summary-icon"><i class="fas fa-calendar-day"></i></div>
             </div>
-
-            <!-- Visitor Statistics -->
-            <div class="row g-4 mb-4">
-                <div class="col-12 col-lg-8">
-                    <div class="glass-card p-4">
-                        <h6 class="fw-800 sub-label mb-4">Visitor Statistics</h6>
-                        <div class="bar-chart-wrapper">
-                            <div class="bar-chart">
-                                <div class="bar-col" style="height: 70%;"></div>
-                                <div class="bar-col" style="height: 90%;"></div>
-                                <div class="bar-col" style="height: 30%;"></div>
-                                <div class="bar-col" style="height: 60%;"></div>
-                                <div class="bar-col" style="height: 80%;"></div>
-                                <div class="bar-col" style="height: 95%;"></div>
-                                <div class="bar-col" style="height: 50%;"></div>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between sub-label mt-3 fs-9" style="min-width: 500px;">
-                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-6 col-xl">
+            <div class="glass-card summary-card">
+                <div>
+                    <span class="sub-label d-block mb-1">Pending</span>
+                    <h2>{{ $stats['pending_visits'] }}</h2>
                 </div>
-                <div class="col-12 col-lg-4">
-                    <div class="glass-card p-4 h-100 text-center">
-                        <h6 class="fw-800 sub-label text-start mb-4">Visit Categories</h6>
-                        <div class="donut-container mx-auto mb-4">
-                            <div class="donut-inner">
-                                <span class="fw-800 fs-4 text-white">250</span>
-                                <span class="sub-label" style="font-size: 8px; color: #fff !important;">Total</span>
-                            </div>
-                        </div>
-                        <div class="row g-2 text-start small">
-                            <div class="col-6 text-white"><i class="fas fa-circle me-1 text-primary"></i> Delivery</div>
-                            <div class="col-6 text-white"><i class="fas fa-circle me-1 text-success"></i> Medical</div>
-                            <div class="col-6 text-white"><i class="fas fa-circle me-1 text-warning"></i> Vendor</div>
-                            <div class="col-6 text-white"><i class="fas fa-circle me-1 text-danger"></i> Clients</div>
-                        </div>
-                    </div>
-                </div>
+                <div class="summary-icon text-warning" style="background:rgba(255,193,7,0.1)"><i class="fas fa-clock"></i></div>
             </div>
+        </div>
+        <div class="col-6 col-xl">
+            <div class="glass-card summary-card">
+                <div>
+                    <span class="sub-label d-block mb-1">Active Visits</span>
+                    <h2>{{ $stats['checked_in_visits'] }}</h2>
+                </div>
+                <div class="summary-icon text-success" style="background:rgba(34,197,94,0.1)"><i class="fas fa-user-check"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-xl">
+            <div class="glass-card summary-card justify-content-center cursor-pointer border-dashed" style="border-width: 2px;">
+                <a href="{{ route('admin.visitor.registration.create') }}" class="d-flex align-items-center gap-2 text-white text-decoration-none">
+                    <i class="fas fa-plus"></i>
+                    <span class="fw-bold text-uppercase fs-9">Register New Visitor</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
-            <!-- Table Section (Log Container with Font Force) -->
-            <div class="glass-card log-container p-4">
-                <h6 class="fw-800 sub-label mb-4">Recent Visits Log</h6>
-                <div class="table-responsive">
+    <!-- Today's Visits -->
+    @if($todayVisits->count() > 0)
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h6 class="fw-800 sub-label mb-4">Today's Visits</h6>
+                <div class="table-responsive log-container">
                     <table class="table align-middle">
                         <thead>
                             <tr>
                                 <th>Visitor</th>
                                 <th>Host</th>
-                                <th>Dept</th>
-                                <th>Duration</th>
-                                <th>Date</th>
+                                <th>Visit Type</th>
+                                <th>Time</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @foreach($todayVisits as $visit)
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="bg-opacity-10 rounded-circle" style="width: 25px; height: 25px;"></div>
-                                        <span class="small fw-800">Adela Parkson</span>
+                                        <div class="bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <span class="fw-800 small">{{ substr($visit->visitor->name, 0, 1) }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="small fw-800 d-block">{{ $visit->visitor->name }}</span>
+                                            <span class="fs-9 text-white-50">{{ $visit->visitor->phone ?? 'N/A' }}</span>
+                                        </div>
                                     </div>
                                 </td>
-                                <td class="small">Vipul Gupta</td>
-                                <td class="small">EPD</td>
-                                <td class="small">1h 45m</td>
-                                <td class="small">24/04/24</td>
-                                <td><span class="status-badge">Completed</span></td>
-                            </tr>
-                            <tr>
+                                <td class="small">{{ $visit->meetingUser->name }}</td>
+                                <td class="small">{{ $visit->type->name ?? 'N/A' }}</td>
+                                <td class="small">{{ \Carbon\Carbon::parse($visit->schedule_time)->format('g:i A') }}</td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="bg-opacity-10 rounded-circle" style="width: 25px; height: 25px;"></div>
-                                        <span class="small fw-800">Jason Statham</span>
+                                    @if($visit->status == 'approved')
+                                        <span class="status-badge text-success">Active</span>
+                                    @elseif($visit->status == 'pending_host')
+                                        <span class="status-badge text-warning">Pending</span>
+                                    @elseif($visit->status == 'completed')
+                                        <span class="status-badge">Completed</span>
+                                    @elseif($visit->status == 'checked_in')
+                                        <span class="status-badge text-success">Checked In</span>
+                                    @elseif($visit->status == 'rejected')
+                                        <span class="status-badge text-danger">Rejected</span>
+                                    @else
+                                        <span class="status-badge">{{ ucfirst($visit->status) }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('admin.visitor.show', $visit->id) }}" class="btn btn-circle text-info" title="View Details">
+                                            <i class="fas fa-eye small"></i>
+                                        </a>
+                                        <a href="{{ route('admin.visitor.edit', $visit->id) }}" class="btn btn-circle text-primary" title="Edit">
+                                            <i class="fas fa-edit small"></i>
+                                        </a>
                                     </div>
                                 </td>
-                                <td class="small">Vipul Gupta</td>
-                                <td class="small">Sales</td>
-                                <td class="small">Active</td>
-                                <td class="small">24/04/24</td>
-                                <td><span class="status-badge text-warning border-orange">On-Site</span></td>
                             </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Pending Visits -->
+    @if($pendingVisits->count() > 0)
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h6 class="fw-800 sub-label mb-4">Pending Approvals</h6>
+                <div class="table-responsive log-container">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Visitor</th>
+                                <th>Purpose</th>
+                                <th>Host</th>
+                                <th>Requested</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($pendingVisits as $visit)
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <span class="fw-800 small">{{ substr($visit->visitor->name, 0, 1) }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="small fw-800 d-block">{{ $visit->visitor->name }}</span>
+                                            <span class="fs-9 text-white-50">{{ $visit->visitor->email }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="small">{{ substr($visit->purpose, 0, 30) }}...</td>
+                                <td class="small">{{ $visit->meetingUser->name }}</td>
+                                <td class="small">{{ $visit->created_at->diffForHumans() }}</td>
+                                <td>
+                                    <span class="status-badge text-warning border-orange">Pending</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('admin.visitor.show', $visit->id) }}" class="btn btn-circle text-info" title="View Details">
+                                            <i class="fas fa-eye small"></i>
+                                        </a>
+                                        <a href="{{ route('admin.visitor.edit', $visit->id) }}" class="btn btn-circle text-primary" title="Edit/Approve">
+                                            <i class="fas fa-edit small"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Recent Visits -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h6 class="fw-800 sub-label mb-4">Recent Visits Log</h6>
+                <div class="table-responsive log-container">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Visitor</th>
+                                <th>Host</th>
+                                <th>Purpose</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($recentVisits as $visit)
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <span class="fw-800 small">{{ substr($visit->visitor->name, 0, 1) }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="small fw-800 d-block">{{ $visit->visitor->name }}</span>
+                                            <span class="fs-9 text-white-50">{{ $visit->visitor->email }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="small">{{ $visit->meetingUser->name }}</td>
+                                <td class="small">{{ substr($visit->purpose, 0, 25) }}...</td>
+                                <td class="small">{{ \Carbon\Carbon::parse($visit->schedule_time)->format('M j, Y') }}</td>
+                                <td>
+                                    @if($visit->status == 'approved')
+                                        <span class="status-badge text-success">Active</span>
+                                    @elseif($visit->status == 'pending_host')
+                                        <span class="status-badge text-warning">Pending</span>
+                                    @elseif($visit->status == 'completed')
+                                        <span class="status-badge">Completed</span>
+                                    @elseif($visit->status == 'checked_in')
+                                        <span class="status-badge text-success">Checked In</span>
+                                    @elseif($visit->status == 'rejected')
+                                        <span class="status-badge text-danger">Rejected</span>
+                                    @else
+                                        <span class="status-badge">{{ ucfirst($visit->status) }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('admin.visitor.show', $visit->id) }}" class="btn btn-circle text-info" title="View Details">
+                                            <i class="fas fa-eye small"></i>
+                                        </a>
+                                        <a href="{{ route('admin.visitor.edit', $visit->id) }}" class="btn btn-circle text-primary" title="Edit">
+                                            <i class="fas fa-edit small"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection

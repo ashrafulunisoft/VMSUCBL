@@ -524,9 +524,8 @@
     <div id="page-admin-dashboard" class="vms-page">
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
-            <div class="d-flex align-items-center gap-3 mb-5">
-                <div class="logo-vms">V</div>
-                <h5 class="fw-800 mb-0 text-white" style="letter-spacing: -1px;">UCB BANK</h5>
+            <div class="d-flex align-items-center gap-3 mb-3 ">
+                <img class="bg-white " src="{{ asset('vms/logo/ucb-bank-logo-bg_removed.png') }}" style="height: 80px; width: 100vh; border-radius:10px;" alt="UCB Bank Logo">
             </div>
 
             <nav>
@@ -534,11 +533,11 @@
                 <a href="{{ route('admin.live.dashboard') }}" class="sidebar-item {{ request()->routeIs('admin.live.dashboard') ? 'active' : '' }}"><i class="fas fa-broadcast-tower"></i> Live Dashboard</a>
                 <a href="{{ route('admin.visitor.registration.create') }}" class="sidebar-item {{ request()->routeIs('admin.visitor.registration.create') ? 'active' : '' }}"><i class="fas fa-plus"></i> Visitor Registration</a>
                 <a href="{{ route('admin.visitor.list') }}" class="sidebar-item {{ request()->routeIs('admin.visitor.list') ? 'active' : '' }}"><i class="fas fa-users"></i> Visitor List</a>
-                <a href="#" class="sidebar-item"><i class="fas fa-history"></i> View History</a>
-                <a href="#" class="sidebar-item"><i class="fas fa-user-plus"></i> Add New User</a>
-                <a href="#" class="sidebar-item"><i class="fas fa-list"></i> Visitor's Log</a>
                 <a href="{{ route('admin.profile') }}" class="sidebar-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}"><i class="fas fa-user"></i> My Profile</a>
-                <a href="#" class="sidebar-item"><i class="fas fa-users"></i> All Users</a>
+                {{-- <a href="#" class="sidebar-item"><i class="fas fa-history"></i> View History</a> --}}
+                {{-- <a href="#" class="sidebar-item"><i class="fas fa-user-plus"></i> Add New User</a> --}}
+                {{-- <a href="#" class="sidebar-item"><i class="fas fa-list"></i> Visitor's Log</a> --}}
+                {{-- <a href="#" class="sidebar-item"><i class="fas fa-users"></i> All Users</a> --}}
 
                 <div class="sidebar-dropdown">
                     <a href="#" class="sidebar-item d-flex align-items-center" onclick="toggleSubmenu(event)">
@@ -551,7 +550,8 @@
                     </div>
                 </div>
 
-                <a href="#" class="sidebar-item"><i class="fas fa-cog"></i> Settings</a>
+                <a href="{{ route('logout') }}" class="sidebar-item text-danger"><i class="fas fa-cog"></i> Logout</a>
+                {{-- <a href="#" class="sidebar-item"><i class="fas fa-cog"></i> Settings</a> --}}
             </nav>
 
             <div class="help-center-box">

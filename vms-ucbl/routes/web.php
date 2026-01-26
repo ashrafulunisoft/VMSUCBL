@@ -240,13 +240,6 @@ Route::get('/visitors/export/send', [VisitorExportController::class, 'sendVisito
 
 
 //---------------------------------------------------------------------------
-//for logout :
-
-
-Route::get('/test', function () {
-    return "Test File";
-    return redirect('/login');
-});
 
 Route::get('/logout', function () {
     Auth::logout();

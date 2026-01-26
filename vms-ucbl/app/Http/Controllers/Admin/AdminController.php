@@ -21,8 +21,44 @@ use Spatie\Permission\Models\Permission;
 
 class AdminController extends Controller
 {
-    public function dashboard(){
-        return view('vms.backend.admin.admin_dashboard');
+    public function dashboard()
+    {
+        // Get statistics for dashboard
+        $stats = [
+            'total_visitors' => \App\Models\Visitor::count(),
+            'total_visits' => \App\Models\Visit::count(),
+            'pending_visits' => \App\Models\Visit::where('status', 'pending_host')->count(),
+            'approved_visits' => \App\Models\Visit::where('status', 'approved')->count(),
+            'completed_visits' => \App\Models\Visit::where('status', 'completed')->count(),
+            'rejected_visits' => \App\Models\Visit::where('status', 'rejected')->count(),
+            'checked_in_visits' => \App\Models\Visit::where('status', 'checked_in')->count(),
+            'visits_today' => \App\Models\Visit::whereDate('schedule_time', today())->count(),
+            'visits_this_month' => \App\Models\Visit::whereMonth('schedule_time', now()->month)
+                ->whereYear('schedule_time', now()->year)
+                ->count(),
+        ];
+
+        // Get today's visits
+        $todayVisits = \App\Models\Visit::with(['visitor', 'meetingUser', 'type'])
+            ->whereDate('schedule_time', today())
+            ->orderBy('schedule_time', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Get pending visits
+        $pendingVisits = \App\Models\Visit::with(['visitor', 'meetingUser', 'type'])
+            ->where('status', 'pending_host')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Get recent visits
+        $recentVisits = \App\Models\Visit::with(['visitor', 'meetingUser', 'type'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('vms.backend.admin.admin_dashboard', compact('stats', 'todayVisits', 'pendingVisits', 'recentVisits'));
     }
 
     /**

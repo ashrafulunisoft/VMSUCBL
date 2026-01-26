@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -239,42 +240,42 @@
                 padding: 1.5rem;
                 border-radius: 20px;
             }
-            
+
             .table-dark {
                 font-size: 0.85rem;
                 white-space: nowrap;
             }
-            
+
             .table-dark th,
             .table-dark td {
                 padding: 0.75rem;
             }
-            
+
             .glass-table-container {
                 background: rgba(255, 255, 255, 0.02);
                 border: 1px solid rgba(255, 255, 255, 0.08);
             }
-            
+
             .table-dark thead {
                 background: rgba(0, 0, 0, 0.2);
             }
-            
+
             .table-dark th {
                 background: transparent;
             }
-            
+
             .table-dark td {
                 background: transparent;
             }
-            
+
             .table-dark tbody tr {
                 background: transparent;
             }
-            
+
             .table-dark tbody tr:hover {
                 background: rgba(255, 255, 255, 0.05);
             }
-            
+
             .table-responsive {
                 overflow-x: auto;
                 background: transparent;
@@ -285,12 +286,12 @@
             .glass-card {
                 padding: 1rem;
             }
-            
+
             .table-dark {
                 font-size: 0.75rem;
                 white-space: nowrap;
             }
-            
+
             .table-dark th,
             .table-dark td {
                 padding: 0.5rem;
@@ -314,6 +315,10 @@
                     <div>
                         <h2 class="fw-800 mb-0 text-white letter-spacing-1 text-shadow-white" style="font-size: 2rem;">Live Dashboard</h2>
                     </div>
+                    <a href="/" class="btn btn-gradient d-flex align-items-center gap-2" style="padding: 0.75rem 1.5rem; font-size: 0.9rem;">
+                        <i class="fas fa-home"></i>
+                        <span>Back to Home</span>
+                    </a>
                 </div>
             </div>
 
@@ -523,7 +528,7 @@
 
         function renderVisits(visits) {
             const tableBody = document.querySelector('#liveVisitsTable tbody');
-            
+
             if (visits.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
@@ -542,7 +547,7 @@
             tableBody.innerHTML = visits.map(visit => {
                 const rfidBadge = visit.rfid ? `<span class="rfid-badge">${visit.rfid}</span>` : '<span class="text-white-50 small">N/A</span>';
                 const checkinTime = visit.checkin_time ? `<div class="text-success small"><i class="fas fa-check-circle me-1"></i>${formatTime(visit.checkin_time)}</div>` : '<span class="text-white-50 small">Not checked in</span>';
-                
+
                 return `
                     <tr id="visit-${visit.id}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s;">
                         <td style="padding: 1rem; color: #fff;">
