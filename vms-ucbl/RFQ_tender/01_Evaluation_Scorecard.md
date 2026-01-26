@@ -1,9 +1,9 @@
 # EVALUATION SCORECARD
-## Visitor Management System RFQ - UCBL
+## Visitor Management System RFP - UCBL
 
 ---
 
-**RFQ Reference:** VMS/UCBL/RFQ/2026/001  
+**RFP Reference:** VMS/UCBL/RFP/2026/001  
 **Evaluation Date:** [Date]  
 **Evaluation Committee:** [Committee Names]
 
@@ -11,10 +11,10 @@
 
 ### INSTRUCTIONS TO EVALUATORS
 
-1. Review each quotation thoroughly against the evaluation criteria
+1. Review each proposal thoroughly against evaluation criteria
 2. Score each section independently on a scale of 0-100
 3. Provide specific comments for low scores
-4. Maintain objectivity and fairness throughout the process
+4. Maintain objectivity and fairness throughout process
 5. Sign and date your evaluation
 
 ---
@@ -22,9 +22,9 @@
 ### SECTION 1: TECHNICAL SOLUTION (30%)
 
 #### 1.1 Completeness of Proposed Solution (10%)
-- Does the solution address all functional requirements?
+- Does solution address all functional requirements?
 - Are all mandatory features included?
-- Is the proposed solution comprehensive?
+- Is proposed solution comprehensive?
 
 | Score | Description |
 |-------|-------------|
@@ -40,7 +40,7 @@ _________________________________________________
 _________________________________________________
 
 #### 1.2 Technology Stack Appropriateness (5%)
-- Is the proposed technology stack modern and industry-standard?
+- Is proposed technology stack modern and industry-standard?
 - Does it support scalability requirements?
 - Is it suitable for UCBL's infrastructure?
 
@@ -572,5 +572,5 @@ __________________________________________________
 
 - This scorecard is confidential
 - Must be submitted with full justification
-- Final decision rests with UCBL Procurement Committee
+- Final decision rests with UCBL Evaluation Committee
 - Any conflict of interest must be disclosed immediately

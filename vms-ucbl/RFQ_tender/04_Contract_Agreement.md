@@ -46,7 +46,7 @@ WHEREAS, UCBL desires to procure a comprehensive Visitor Management System (VMS)
 
 WHEREAS, Vendor represents that it has the requisite expertise, experience, and resources to upgrade the existing VMS demo to production deployment and implement advanced features;
 
-WHEREAS, Vendor has submitted a proposal in response to UCBL's Request for Quotation (RFQ) Reference No. VMS/UCBL/RFQ/2026/001;
+WHEREAS, Vendor has submitted a proposal in response to UCBL's Request for Proposal (RFP) Reference No. VMS/UCBL/RFP/2026/001;
 
 WHEREAS, UCBL has evaluated Vendor's proposal and has selected Vendor to upgrade the existing VMS demo to full production deployment and provide additional Services (hereinafter defined);
 

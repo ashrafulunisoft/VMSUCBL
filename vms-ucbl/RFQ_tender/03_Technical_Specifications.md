@@ -4,7 +4,7 @@
 
 ---
 
-**RFQ Reference:** VMS/UCBL/RFQ/2026/001  
+**RFP Reference:** VMS/UCBL/RFP/2026/001
 **Document Version:** 2.0  
 **Date:** January 26, 2026
 

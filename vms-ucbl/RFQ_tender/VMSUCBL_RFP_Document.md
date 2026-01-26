@@ -1,9 +1,9 @@
-# REQUEST FOR QUOTATION (RFQ)
+# REQUEST FOR PROPOSAL (RFP)
 ## Visitor Management System for United Commercial Bank Limited (UCBL)
 
 ---
 
-**Reference No:** VMS/UCBL/RFQ/2026/001  
+**Reference No:** VMS/UCBL/RFP/2026/001  
 **Date:** January 26, 2026  
 **Closing Date:** February 15, 2026  
 **Closing Time:** 2:00 PM (Bangladesh Standard Time)
@@ -16,7 +16,7 @@
 United Commercial Bank Limited (UCBL) is one of the leading private sector commercial banks in Bangladesh, committed to providing modern banking services with advanced technological solutions.
 
 #### 1.2 Project Overview
-UCBL has developed a comprehensive **Visitor Management System (VMS) Demo** that is currently operational and ready for production deployment. The system includes core functionalities with a modern technology stack. UCBL now invites quotations from eligible software development firms to **upgrade the demo to full production deployment** and implement additional advanced features across all UCBL branches and administrative offices throughout Bangladesh.
+UCBL has developed a comprehensive **Visitor Management System (VMS) Demo** that is currently operational and ready for production deployment. The system includes core functionalities with a modern technology stack. UCBL now invites proposals from eligible software development firms to **upgrade the demo to full production deployment** and implement additional advanced features across all UCBL branches and administrative offices throughout Bangladesh.
 
 **Current Demo System Status:**
 - Fully functional demo with core VMS features
@@ -27,7 +27,7 @@ UCBL has developed a comprehensive **Visitor Management System (VMS) Demo** that
 - Basic features working (RFID, CSV export, Email notifications)
 
 #### 1.3 Purpose
-This RFQ aims to identify qualified vendors who can:
+This RFP aims to identify qualified vendors who can:
 
 1. **Upgrade the existing demo to production deployment** for UCBL's 500+ branches
 2. **Implement additional advanced features** (QR codes, Face Recognition, etc.)
@@ -374,7 +374,7 @@ Vendor may recommend additional technologies for enhanced functionality:
 
 ---
 
-### 7. QUOTATION REQUIREMENTS
+### 7. PROPOSAL REQUIREMENTS
 
 #### 7.1 Pricing Structure
 Vendors must provide detailed pricing for:
@@ -411,7 +411,7 @@ Vendors must provide detailed pricing for:
 - Payment within 30 days of invoice
 
 #### 7.3 Validity
-- Quotation validity: 90 days from submission date
+- Proposal validity: 90 days from submission date
 - Price escalation clause (if applicable)
 
 ---
@@ -540,8 +540,8 @@ Dhaka-1000, Bangladesh
 
 #### 10.1 Contract Terms
 - Contract will be awarded to the highest-evaluated responsive bidder
-- UCBL reserves the right to accept or reject any or all quotations
-- UCBL is not bound to accept the lowest quotation
+- UCBL reserves the right to accept or reject any or all proposals
+- UCBL is not bound to accept the lowest proposal
 - No negotiations will be entertained after submission
 
 #### 10.2 Intellectual Property Rights
@@ -579,7 +579,7 @@ Dhaka-1000, Bangladesh
 
 ### 11. CONTACT INFORMATION
 
-For any queries related to this RFQ:
+For any queries related to this RFP:
 
 **Technical Queries:**
 - Name: [Technical Contact Name]
@@ -624,7 +624,7 @@ Detailed scoring rubric for evaluation committee
 
 ---
 
-*This RFQ is a confidential document of United Commercial Bank Limited. Unauthorized reproduction or distribution is prohibited.*
+*This RFP is a confidential document of United Commercial Bank Limited. Unauthorized reproduction or distribution is prohibited.*
 
 *UCBL is an equal opportunity employer and encourages applications from all qualified vendors.*
 

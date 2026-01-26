@@ -1,4 +1,4 @@
-# RFQ TENDER DOCUMENTATION
+# RFP TENDER DOCUMENTATION
 ## Visitor Management System - UCBL
 ## Demo-to-Production Upgrade Project
 
@@ -6,15 +6,15 @@
 
 **Package Version:** 2.0  
 **Created:** January 26, 2026  
-**RFQ Reference:** VMS/UCBL/RFQ/2026/001
+**RFP Reference:** VMS/UCBL/RFP/2026/001
 
 ---
 
 ### OVERVIEW
 
-This package contains all necessary documentation for the Request for Quotation (RFQ) process for **upgrading the existing VMS demo to full production deployment** and implementing advanced features for United Commercial Bank Limited (UCBL).
+This package contains all necessary documentation for the Request for Proposal (RFP) process for **upgrading the existing VMS demo to full production deployment** and implementing advanced features for United Commercial Bank Limited (UCBL).
 
-**IMPORTANT: This is NOT a greenfield project.** UCBL has already developed a comprehensive VMS demo system with modern technology stack. The RFQ is for upgrading this demo to enterprise-grade production deployment across 500+ branches.
+**IMPORTANT: This is NOT a greenfield project.** UCBL has already developed a comprehensive VMS demo system with modern technology stack. The RFP is for upgrading this demo to enterprise-grade production deployment across 500+ branches.
 
 ---
 
@@ -58,8 +58,8 @@ This package contains all necessary documentation for the Request for Quotation 
 
 This package includes the following documents:
 
-#### 1. **VMSUCBL_RFQ_Document.md**
-**Purpose:** Main Request for Quotation document for demo-to-production upgrade
+#### 1. **VMSUCBL_RFP_Document.md**
+**Purpose:** Main Request for Proposal document for demo-to-production upgrade
 
 **Contents:**
 - Current demo system overview and capabilities
@@ -68,7 +68,7 @@ This package includes the following documents:
 - Technical specifications (current stack and production requirements)
 - Deliverables (9 phases, 32 weeks)
 - Eligibility criteria for vendors
-- Quotation requirements
+- Proposal requirements
 - Evaluation criteria
 - Submission requirements
 - Terms and conditions
@@ -110,7 +110,7 @@ This package includes the following documents:
 ---
 
 #### 3. **02_Non_Disclosure_Agreement.md**
-**Purpose:** Legal agreement to protect UCBL's confidential information during RFQ process
+**Purpose:** Legal agreement to protect UCBL's confidential information during RFP process
 
 **Contents:**
 - Parties to agreement
@@ -274,7 +274,7 @@ This package includes the following documents:
 
 #### For UCBL Procurement Department
 
-1. **Send RFQ package** to potential vendors
+1. **Send RFP package** to potential vendors
 2. **Provide demo access** after NDA signing
 3. **Collect proposals** by closing date
 4. **Verify completeness** of all required documents
@@ -333,7 +333,7 @@ Before submitting your proposal, ensure you have:
 
 | Phase | Date | Activity |
 |-------|------|----------|
-| RFQ Issuance | January 26, 2026 | RFQ documents released to vendors |
+| RFP Issuance | January 26, 2026 | RFP documents released to vendors |
 | Queries Period | Jan 26 - Feb 5, 2026 | Vendors can submit queries |
 | Demo Access | Feb 1 - Feb 5, 2026 | Qualified vendors access demo after NDA |
 | Submission Deadline | February 15, 2026 (2:00 PM) | Last day for proposal submission |
@@ -423,7 +423,7 @@ Before submitting your proposal, ensure you have:
 
 #### For Vendors
 1. **Project Type:** This is a demo-to-production upgrade, not a greenfield project
-2. **Quotation Validity:** 90 days from submission date
+2. **Proposal Validity:** 90 days from submission date
 3. **Price Escalation:** Must be justified in proposal
 4. **IP Rights:** All developed IP will belong to UCBL
 5. **Source Code:** Must be provided upon completion (including all upgrades)
@@ -436,8 +436,8 @@ Before submitting your proposal, ensure you have:
 #### For UCBL
 1. **Demo System:** Fully functional demo with core features implemented
 2. **Technology Stack:** Modern stack (PHP 8.4, Laravel 12, Reverb)
-3. **No Obligation:** UCBL is not bound to accept lowest quotation
-4. **Right to Reject:** UCBL reserves right to accept or reject any or all quotations
+3. **No Obligation:** UCBL is not bound to accept lowest proposal
+4. **Right to Reject:** UCBL reserves right to accept or reject any or all proposals
 5. **Confidentiality:** All vendor proposals and demo access are confidential
 6. **Transparency:** Evaluation process must be fair and transparent
 7. **Documentation:** All evaluation decisions must be documented
@@ -450,7 +450,7 @@ Before submitting your proposal, ensure you have:
 ```
 RFQ_tender/
 ├── README.md (this file)
-├── VMSUCBL_RFQ_Document.md (main RFQ)
+├── VMSUCBL_RFP_Document.md (main RFP)
 ├── 01_Evaluation_Scorecard.md (evaluation rubric)
 ├── 02_Non_Disclosure_Agreement.md (NDA)
 ├── 03_Technical_Specifications.md (technical specs)
@@ -463,7 +463,7 @@ RFQ_tender/
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0 | January 26, 2026 | Initial RFQ package creation (greenfield project) |
+| 1.0 | January 26, 2026 | Initial RFP package creation (greenfield project) |
 | 2.0 | January 26, 2026 | Updated for demo-to-production upgrade project |
 
 ---
@@ -480,6 +480,6 @@ Unauthorized reproduction, distribution, or use of this documentation is strictl
 
 ---
 
-*For updates, clarifications, or amendments to this RFQ, please visit: www.ucbl.com/tenders*
+*For updates, clarifications, or amendments to this RFP, please visit: www.ucbl.com/tenders*
 
 *Last Updated: January 26, 2026*

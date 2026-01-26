@@ -30,7 +30,7 @@
 
 The Vendor agrees to receive and maintain in strict confidence certain confidential and proprietary information of UCBL for the purpose of:
 
-- Evaluating the Request for Quotation (RFQ) Reference No. VMS/UCBL/RFQ/2026/001
+- Evaluating the Request for Proposal (RFP) Reference No. VMS/UCBL/RFP/2026/001
 - Developing a proposal for the Visitor Management System project
 - Potentially entering into a business relationship with UCBL
 - Understanding UCBL's business operations, systems, and requirements
