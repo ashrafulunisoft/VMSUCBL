@@ -40,8 +40,8 @@
                                name="start_date"
                                id="startDate"
                                value="{{ $startDate ?? '' }}"
-                               class="input-dark input-custom">
-                        <i class="fas fa-calendar-day input-icon"></i>
+                               class="input-dark input-custom text-primary">
+                        {{-- <i class="fas fa-calendar-day input-icon"></i> --}}
                     </div>
                 </div>
 
@@ -54,7 +54,7 @@
                                id="endDate"
                                value="{{ $endDate ?? '' }}"
                                class="input-dark input-custom">
-                        <i class="fas fa-calendar-check input-icon"></i>
+                        {{-- <i class="fas fa-calendar-check input-icon"></i> --}}
                     </div>
                 </div>
 
@@ -313,7 +313,7 @@
             const dropdown = document.getElementById('phoneDropdown');
             const input = document.getElementById('phoneSearch');
             const rect = input.getBoundingClientRect();
-            
+
             dropdown.innerHTML = visitors.map(visitor => `
                 <div class="autocomplete-item" onclick="addVisitor(${visitor.id}, '${visitor.name}', '${visitor.phone}', '${visitor.email}')">
                     <div class="d-flex justify-content-between align-items-center">
@@ -325,7 +325,7 @@
                     </div>
                 </div>
             `).join('');
-            
+
             // Position dropdown below input
             dropdown.style.top = '100%';
             dropdown.style.left = '0';
@@ -338,7 +338,7 @@
             const dropdown = document.getElementById('hostEmailDropdown');
             const input = document.getElementById('hostEmailSearch');
             const rect = input.getBoundingClientRect();
-            
+
             dropdown.innerHTML = hosts.map(host => `
                 <div class="autocomplete-item" onclick="selectHost(${host.id}, '${host.name}', '${host.email}')">
                     <div class="d-flex justify-content-between align-items-center">
@@ -350,7 +350,7 @@
                     </div>
                 </div>
             `).join('');
-            
+
             // Position dropdown below input
             dropdown.style.top = '100%';
             dropdown.style.left = '0';
@@ -455,7 +455,7 @@
             const emptyState = document.getElementById('emptyState');
             const totalVisits = document.getElementById('totalVisits');
             const clearSection = document.getElementById('clearSelectionsSection');
-            
+
             let html = '';
             let totalCount = 0;
 
@@ -539,16 +539,16 @@
             // Remove existing preview rows first
             const existingPreviewRows = tableBody.querySelectorAll('.preview-row');
             existingPreviewRows.forEach(row => row.remove());
-            
+
             if (html) {
                 // Check if empty state exists and remove it
                 if (emptyState) {
                     emptyState.remove();
                 }
-                
+
                 // Add preview rows to the beginning of table
                 tableBody.insertAdjacentHTML('afterbegin', html);
-                
+
                 // Update total count
                 totalVisits.textContent = totalCount;
             } else {
@@ -566,11 +566,11 @@
             const hostDropdown = document.getElementById('hostEmailDropdown');
             const phoneSearch = document.getElementById('phoneSearch');
             const hostSearch = document.getElementById('hostEmailSearch');
-            
+
             if (!phoneDropdown.contains(e.target) && e.target !== phoneSearch) {
                 phoneDropdown.style.display = 'none';
             }
-            
+
             if (!hostDropdown.contains(e.target) && e.target !== hostSearch) {
                 hostDropdown.style.display = 'none';
             }

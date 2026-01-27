@@ -779,9 +779,9 @@
 
                 <!-- Settings - Permission Based -->
                 @can('manage settings')
-                <a href="#" class="sidebar-item">
+                {{-- <a href="#" class="sidebar-item">
                     <i class="fas fa-cog"></i> Settings
-                </a>
+                </a> --}}
                 @endcan
 
                 <!-- Profile - Always visible -->
@@ -790,9 +790,9 @@
                 </a>
 
                 <!-- Settings - Always visible -->
-                <a href="#" class="sidebar-item">
+                {{-- <a href="#" class="sidebar-item">
                     <i class="fas fa-cog"></i> Settings
-                </a>
+                </a> --}}
 
                 <!-- Logout - Always visible -->
                 <a href="{{ route('logout') }}" class="sidebar-item text-danger" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
