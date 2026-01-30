@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCB Bank - Block Visitor</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at center, #101d42 0%, #060b1d 100%);
+            --sidebar-bg: #111a30;
+            --active-blue: #5046e5;
+            --neon-danger: #00f2fe; /* Custom teal for primary action in image */
+            --neon-red: #ff3131;
+            --neon-blue: #3b82f6;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-blur: blur(25px);
+            
+            /* High-End Neon Glows */
+            --glow-red: 0 0 25px rgba(255, 49, 49, 0.4);
+            --glow-blue: 0 0 25px rgba(59, 130, 246, 0.4);
+            --glow-teal: 0 0 25px rgba(16, 185, 129, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: #f1f5f9;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Sidebar - Brand Identity */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: var(--sidebar-bg);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2.5rem;
+            padding-left: 0.5rem;
+        }
+
+        .logo-box {
+            width: 44px;
+            height: 44px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e3a8a;
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .logo-text { font-size: 1.5rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.85rem 1.25rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 14px;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-item.active {
+            background: var(--active-blue);
+            color: white;
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Main Container */
+        .main-container {
+            margin-left: 260px;
+            padding: 3rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-titles h1 { font-size: 1.85rem; font-weight: 800; margin-bottom: 4px; color: #fff; }
+        .header-titles p { font-size: 0.85rem; opacity: 0.5; text-transform: uppercase; letter-spacing: 1.2px; }
+
+        .admin-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0.4rem 0.4rem 0.4rem 1.5rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Image-Style Modal/Card */
+        .glass-block-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 40px;
+            max-width: 620px;
+            width: 100%;
+            margin: auto;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+            animation: modalAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalAppear {
+            from { opacity: 0; transform: scale(0.95) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header-custom {
+            padding: 2.5rem 3rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header-custom h2 { font-size: 1.7rem; font-weight: 800; color: white; margin: 0; }
+
+        .btn-close-custom {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; cursor: pointer; transition: 0.3s;
+        }
+
+        .modal-body-custom { padding: 0 3rem 2rem; }
+
+        /* Information Grid from Image */
+        .info-panel {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .info-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 1.5px;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .info-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: block;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Reason Field */
+        .reason-field {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 20px;
+            padding: 1.2rem;
+            color: white !important;
+            font-size: 0.9rem;
+            width: 100%;
+            min-height: 100px;
+            resize: none;
+            transition: 0.3s;
+        }
+
+        .reason-field:focus {
+            outline: none;
+            border-color: var(--neon-red) !important;
+            box-shadow: 0 0 15px rgba(255, 49, 49, 0.2);
+        }
+
+        /* Action Buttons - Neon Styles from Image */
+        .modal-footer-custom {
+            padding: 0 3rem 3rem;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-neon-wow {
+            flex: 1;
+            padding: 1.1rem;
+            border-radius: 50px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+            border: none;
+            color: white;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Block Visitor Button - Neon Green/Teal style from Image */
+        .btn-block-action {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: var(--glow-teal);
+        }
+
+        .btn-block-action:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.5);
+            filter: brightness(1.1);
+        }
+
+        /* Save Button - Neon Blue style from Image */
+        .btn-save-action {
+            background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+            box-shadow: var(--glow-blue);
+        }
+
+        .btn-save-action:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .help-center-card { margin-top: auto; background: linear-gradient(180deg, #5046e5 0%, #3b82f6 100%); border-radius: 24px; padding: 1.5rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .btn-help { background: white; color: #1e3a8a; border: none; border-radius: 50px; padding: 0.6rem; width: 100%; margin-top: 1rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-box">V</div>
+            <span class="logo-text">VMS</span>
+        </div>
+        <nav class="flex-column">
+            <a href="search.html" class="nav-item"><i data-lucide="layout-grid"></i> Dashboard</a>
+            <a href="blocklist.html" class="nav-item active"><i data-lucide="shield-alert"></i> Block Management</a>
+            <a href="#" class="nav-item"><i data-lucide="list"></i> Visitor's Log</a>
+            <a href="#" class="nav-item"><i data-lucide="users"></i> All Users</a>
+            <a href="#" class="nav-item"><i data-lucide="settings"></i> Settings</a>
+        </nav>
+        <div class="help-center-card">
+            <h6 class="fw-800 text-white mb-0">Help Center</h6>
+            <button class="btn-help">Get Help</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Top Header consistent with App -->
+        <header class="top-header">
+            <div class="header-titles">
+                <h1>Security Governance</h1>
+                <p>Identity & Access Management Portal</p>
+            </div>
+            <div class="admin-pill">
+                <div class="text-end me-3">
+                    <span class="d-block fw-800 text-white" style="font-size: 0.75rem;">Admin Clearance</span>
+                    <span class="d-block opacity-50" style="font-size: 0.65rem;">Level 5 Authorized</span>
+                </div>
+                <div style="width: 38px; height: 38px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                    <i data-lucide="user" style="width: 20px;"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Block Visitor Modal-Style Card -->
+        <div class="glass-block-card">
+            <div class="modal-header-custom">
+                <h2>Blocked Visitor</h2>
+                <div class="btn-close-custom" onclick="history.back()">
+                    <i data-lucide="x" style="width: 18px;"></i>
+                </div>
+            </div>
+
+            <div class="modal-body-custom">
+                <!-- Info Panel exactly like the image -->
+                <div class="info-panel">
+                    <div class="row">
+                        <div class="col-6">
+                            <span class="info-label">Visitor Name</span>
+                            <span class="info-value">John Doe</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="info-label">Visitor ID</span>
+                            <span class="info-value">#BLK-8291-UCB</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="info-label">Phone Number</span>
+                            <span class="info-value">+1 (555) 012-3456</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="info-label">RFID Number</span>
+                            <span class="info-value">RFID-9900-X12</span>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <label class="info-label">Block Reason Statement</label>
+                            <textarea class="reason-field" placeholder="Describe the policy violation or security breach incident details..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-custom">
+                <button class="btn-neon-wow btn-block-action">Block Visitor</button>
+                <button class="btn-neon-wow btn-save-action">Save</button>
+            </div>
+        </div>
+
+        <footer class="mt-auto pt-5 text-center opacity-30 small uppercase tracking-widest font-monospace">
+            © 2026 UCB BANK • Security Compliance Ops • V4.5.3
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

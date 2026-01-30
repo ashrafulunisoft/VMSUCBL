@@ -9,7 +9,6 @@ class ProfileController extends Controller
     //
     public function index()
     {
-        // return "This is the Profile page ";
-        return view('auth_custom.profile');
+        return view('vms.backend.profile.index');
     }
 }

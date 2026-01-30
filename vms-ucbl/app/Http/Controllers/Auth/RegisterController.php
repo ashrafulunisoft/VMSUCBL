@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class RegisterController extends Controller
 {
@@ -24,11 +25,17 @@ class RegisterController extends Controller
             'password' => 'required|confirmed|min:8',
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        // Assign visitor role to the new user by default
+        $visitorRole = Role::where('name', 'visitor')->first();
+        if ($visitorRole) {
+            $user->assignRole('visitor');
+        }
 
         return redirect()->route('login');
     }
